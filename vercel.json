@@ -4,16 +4,22 @@
   "trailingSlash": false,
   "headers": [
     {
-      "source": "/data.json",
+      "source": "/(data.json|details.json)",
       "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=300, s-maxage=86400, stale-while-revalidate=604800" },
+        { "key": "Cache-Control", "value": "public, no-cache, must-revalidate, stale-while-revalidate=86400" },
         { "key": "Content-Type", "value": "application/json; charset=utf-8" }
       ]
     },
     {
-      "source": "/(styles.css|app.js|favicon.svg|manifest.webmanifest)",
+      "source": "/(styles.css|app.js)",
       "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800" }
+        { "key": "Cache-Control", "value": "public, no-cache, must-revalidate" }
+      ]
+    },
+    {
+      "source": "/(favicon.svg|manifest.webmanifest)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=86400, stale-while-revalidate=604800" }
       ]
     },
     {

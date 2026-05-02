@@ -29,7 +29,7 @@
   function loadDetails() {
     if (detailsCache) return Promise.resolve(detailsCache);
     if (detailsPromise) return detailsPromise;
-    detailsPromise = fetch("/details.json", { cache: "force-cache" })
+    detailsPromise = fetch("/details.json", { cache: "default" })
       .then((r) => r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`)))
       .then((data) => { detailsCache = data; return data; })
       .catch((err) => {
@@ -454,7 +454,7 @@
     });
 
     try {
-      const res = await fetch("/data.json", { cache: "force-cache" });
+      const res = await fetch("/data.json", { cache: "default" });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       dataset = await res.json();
     } catch (err) {
