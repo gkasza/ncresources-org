@@ -314,8 +314,8 @@
 
     if (rows === null) {
       resultsEl.innerHTML = `<div class="empty">
-        <p><strong>Pick a city or county</strong> — and what kind of help you need — to see agencies near you.</p>
-        <p lang="es"><strong>Elige una ciudad o condado</strong> y el tipo de ayuda que necesitas para ver las agencias cercanas.</p>
+        <p><strong>Pick a city or county</strong> and the type of help you need.</p>
+        <p lang="es"><strong>Elige una ciudad o condado</strong> y el tipo de ayuda que necesitas.</p>
       </div>`;
       setStatus("");
       return;
