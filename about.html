@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#002868" />
+<meta name="description" content="About NC Resources — a free community directory for finding food, shelter, utility help, and other resources across North Carolina." />
+<title>About — NC Resources</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+<link rel="stylesheet" href="/styles.css" />
+<style>
+  .prose {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 1.25rem 1.1rem;
+    box-shadow: var(--shadow-sm);
+    margin-top: -1.25rem;
+    position: relative;
+    z-index: 1;
+  }
+  .prose h2 {
+    font-family: var(--font-display);
+    font-size: 1.3rem;
+    margin: 1.4rem 0 0.4rem;
+    color: var(--nc-blue);
+  }
+  .prose h2:first-child { margin-top: 0; }
+  .prose p, .prose li { font-size: 1rem; line-height: 1.55; }
+  .prose ul { padding-left: 1.2rem; }
+  .prose .callout {
+    background: #fff8e6;
+    border-left: 3px solid var(--nc-gold);
+    padding: 0.7rem 0.9rem;
+    border-radius: 6px;
+    color: #6b4a00;
+  }
+  .prose .callout strong { color: var(--nc-red); }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-band"></div>
+  <div class="hero-inner">
+    <a href="/" class="brand" aria-label="NC Resources home">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+      </span>
+      <span class="brand-text">
+        <strong>NC Resources</strong>
+        <em>Free community help — North Carolina</em>
+      </span>
+    </a>
+    <a class="about-link" href="/">Find help</a>
+  </div>
+  <h1 class="lede">About this directory</h1>
+</header>
+
+<main>
+  <section class="prose">
+    <h2>What this is</h2>
+    <p>NC Resources is a free, simple directory of community help — food banks, shelters, diaper banks, rent and utility assistance, transportation, healthcare, and more — across North Carolina. It exists to make it easier for people in need (and the people helping them) to quickly find a real address, real hours, and a real phone number.</p>
+
+    <p>It is built and maintained as a personal project by a family with a loved one who works in social services in Durham. There is no organization behind it, no donations requested, no ads, no tracking, no login. Use what's helpful. Share it freely.</p>
+
+    <div class="callout">
+      <strong>Important:</strong> Information on this site was collected from each agency's own website and from NC&nbsp;211. Agency hours, phone numbers, and program availability change. Some entries may already be out of date by the time you read this. <strong>Please call before you go.</strong>
+    </div>
+
+    <h2>Where the data comes from</h2>
+    <ul>
+      <li><strong>NC 211</strong> — the United Way of North Carolina's referral service at <a href="https://nc211.org" rel="noopener">nc211.org</a>. We start from their listings.</li>
+      <li><strong>Each agency's own website</strong> — we then visit the agency's site and update hours, phone, address, and eligibility when they differ from 211.</li>
+      <li>When the two sources disagree, the agency's own site wins, and the prior 211 value is noted on the row so you have the audit trail.</li>
+    </ul>
+
+    <h2>How to read each listing</h2>
+    <ul>
+      <li><strong>Days &amp; hours</strong> — the program-specific hours when known (food pantry hours, not "office hours").</li>
+      <li><strong>Who</strong> — eligibility (county residency, age, income, ID requirements).</li>
+      <li><strong>Bring</strong> — documents the agency asks for (photo ID, proof of address, etc.).</li>
+      <li><strong>How</strong> — how to apply (call, walk in, register online, by appointment).</li>
+      <li><strong>Note</strong> — any caveat: schedule was corrected, agency website is dead, waitlist is closed, program moved, "phone confirmation recommended."</li>
+      <li><strong>Last checked</strong> — the date the row was last cross-checked. Older dates mean the agency website wasn't reachable; in those cases call ahead.</li>
+    </ul>
+
+    <h2>What this directory is NOT</h2>
+    <ul>
+      <li>It is not an emergency service. <strong>For emergencies dial <a href="tel:911">911</a>.</strong></li>
+      <li>It is not a 24/7 helpline. For 24/7 referrals dial <strong><a href="tel:211">2-1-1</a></strong>.</li>
+      <li>It is not endorsed by, affiliated with, or operated by any of the agencies listed here.</li>
+      <li>It is not a substitute for calling the agency to confirm availability before traveling.</li>
+    </ul>
+
+    <h2>Found something wrong?</h2>
+    <p>If you spot a wrong phone number, an address that's changed, or a program that no longer exists, please let us know. Email <a href="mailto:hello@ncresources.org">hello@ncresources.org</a> with the agency name and what's outdated. Corrections will land in the next refresh.</p>
+
+    <h2>Privacy</h2>
+    <p>This site does not require an account. It does not log searches. It does not use cookies. It does not have ads. It does not run analytics that track you across the web. Your phone calls and directions go directly through your phone — they don't pass through this site.</p>
+
+    <h2>Refresh schedule</h2>
+    <p>The full directory is rebuilt periodically by re-pulling from 211 and re-checking each agency's website. The "Last checked" date on each row tells you when that specific entry was last verified.</p>
+
+    <p style="margin-top:1.5rem;"><a href="/" class="cta">← Back to the directory</a></p>
+  </section>
+</main>
+
+<footer class="foot">
+  <p><strong>This is a free service.</strong> Information may be out of date. Call before you go. For emergencies dial <a href="tel:911">911</a>. For 24/7 referrals dial <a href="tel:211">2-1-1</a>.</p>
+</footer>
+
+</body>
+</html>

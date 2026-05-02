@@ -1,0 +1,12 @@
+{
+  "name": "NC Resources",
+  "short_name": "NC Resources",
+  "description": "Free directory of community help across North Carolina.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FAF6E8",
+  "theme_color": "#002868",
+  "icons": [
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}
