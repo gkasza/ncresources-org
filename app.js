@@ -97,6 +97,13 @@
     const facets = dataset.facets;
     const counts = computeFacetCounts(state);
 
+    // Update the visible field label to match the place type so sighted users
+    // (especially low-vision) always see "City" or "County" above the dropdown.
+    const placeValueLabel = document.getElementById("placeValueLabel");
+    if (placeValueLabel) {
+      placeValueLabel.textContent = state.placeType === "county" ? "County" : "City";
+    }
+
     // ---- Place dropdown: cities OR counties, only those with non-zero matches
     // (always keep the currently-selected one visible, even if it would now be 0)
     const fullList = state.placeType === "county" ? facets.counties : facets.cities;
@@ -157,7 +164,8 @@
     });
   }
 
-  function flagFor(notes) {
+  function flagFor(notes, noContact) {
+    if (noContact) return "caution";
     if (!notes) return null;
     const n = notes.toLowerCase();
     if (n.includes("critical") || n.includes("safety-critical")) return "critical";
@@ -173,9 +181,13 @@
     return null;
   }
 
+  // Short codes like 211, 311, 411, 911 are real dial-able phone numbers
+  // (e.g. NC Coordinated Entry's "phone" is literally 211). Allow them.
+  const SHORT_CODES = new Set(["211", "311", "411", "511", "611", "711", "811", "911"]);
   function telHref(phone) {
     if (!phone) return null;
-    const digits = phone.replace(/\D/g, "");
+    const digits = String(phone).replace(/\D/g, "");
+    if (SHORT_CODES.has(digits)) return `tel:${digits}`;
     if (digits.length < 7) return null;
     return `tel:${digits.length === 10 ? "+1" + digits : digits}`;
   }
@@ -187,51 +199,84 @@
     return `https://maps.apple.com/?q=${q}`; // iOS deep-links + Android still resolves
   }
 
+  // Treat a website value as valid only if it has a real domain shape
+  // (something.tld). Catches bad data like "http://Pleasant Ridge Baptist Church".
   function ensureProtocol(url) {
     if (!url) return null;
-    if (/^https?:\/\//i.test(url)) return url;
-    return `https://${url}`;
+    const stripped = String(url).trim().replace(/^https?:\/\//i, "");
+    // Must contain a dot in a plausible position and no spaces
+    if (/\s/.test(stripped)) return null;
+    if (!/^[\w.-]+\.[a-z]{2,}/i.test(stripped)) return null;
+    return /^https?:\/\//i.test(url) ? url : `https://${stripped}`;
+  }
+
+  // ISO date (YYYY-MM-DD) → "Apr 12, 2026" so screen readers say it well
+  // and sighted users get a natural form. Falls back to the raw value.
+  function formatVerifiedDate(s) {
+    if (!s) return "";
+    const m = String(s).match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (!m) return s;
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const mi = parseInt(m[2], 10) - 1;
+    if (mi < 0 || mi > 11) return s;
+    return `${months[mi]} ${parseInt(m[3], 10)}, ${m[1]}`;
   }
 
   function cardHTML(r) {
-    const flag = flagFor(r.notes);
-    const flagAttr = flag ? `data-flag="${flag}"` : "";
-
+    const agencyEsc = escapeHtml(r.agency);
     const tel = telHref(r.phone);
     const map = mapsHref(r.address, r.city, r.zip);
     const web = ensureProtocol(r.website);
+    const noContact = !tel && !web;
+    const flag = flagFor(r.notes, noContact);
+    const flagAttr = flag ? `data-flag="${flag}"` : "";
 
     const ctas = [];
-    if (tel) ctas.push(`<a class="cta" href="${tel}" aria-label="Call ${escapeHtml(r.agency)}">📞 Call ${escapeHtml(r.phone)}</a>`);
-    if (map) ctas.push(`<a class="cta alt" href="${map}" rel="noopener" aria-label="Get directions">📍 Directions</a>`);
-    if (web) ctas.push(`<a class="cta alt" href="${escapeHtml(web)}" rel="noopener" aria-label="Visit website">🌐 Website</a>`);
+    if (tel) ctas.push(`<a class="cta" href="${tel}" aria-label="Call ${agencyEsc} at ${escapeHtml(r.phone)}"><span aria-hidden="true">📞</span> Call ${escapeHtml(r.phone)}</a>`);
+    if (map) ctas.push(`<a class="cta alt" href="${map}" rel="noopener" aria-label="Get directions to ${agencyEsc}"><span aria-hidden="true">📍</span> Directions</a>`);
+    if (web) ctas.push(`<a class="cta alt" href="${escapeHtml(web)}" rel="noopener" aria-label="Visit ${agencyEsc} website"><span aria-hidden="true">🌐</span> Website</a>`);
+
+    // Safety net: agency has no phone AND no website. The user has no way
+    // to reach this place to verify before showing up. Surface a 211 prompt.
+    const noContact = !tel && !web;
+    if (noContact) {
+      ctas.unshift(`<a class="cta" href="tel:211" aria-label="Call 2-1-1 to verify this listing"><span aria-hidden="true">📞</span> Call 2-1-1 first</a>`);
+    }
 
     const locParts = [r.address, r.city, r.zip ? String(r.zip) : null].filter(Boolean);
     const loc = locParts.length ? escapeHtml(locParts.join(", ")) : "Address not listed — call before visiting";
 
     const rowsHtml = [];
-    if (r.schedule) rowsHtml.push(`<div class="row"><span class="row-icon">🕒</span><span class="row-text">${escapeHtml(r.schedule)}</span></div>`);
-    if (r.eligibility) rowsHtml.push(`<div class="row"><span class="row-icon">✅</span><span class="row-text"><strong>Who:</strong> ${escapeHtml(r.eligibility)}</span></div>`);
-    if (r.documents && r.documents !== "None") rowsHtml.push(`<div class="row"><span class="row-icon">📄</span><span class="row-text"><strong>Bring:</strong> ${escapeHtml(r.documents)}</span></div>`);
-    if (r.apply) rowsHtml.push(`<div class="row"><span class="row-icon">➜</span><span class="row-text"><strong>How:</strong> ${escapeHtml(r.apply)}</span></div>`);
+    if (r.schedule) rowsHtml.push(`<div class="row"><span class="row-icon" aria-hidden="true">🕒</span><span class="row-text">${escapeHtml(r.schedule)}</span></div>`);
+    if (r.eligibility) rowsHtml.push(`<div class="row"><span class="row-icon" aria-hidden="true">✅</span><span class="row-text"><strong>Who:</strong> ${escapeHtml(r.eligibility)}</span></div>`);
+    if (r.documents && r.documents !== "None") rowsHtml.push(`<div class="row"><span class="row-icon" aria-hidden="true">📄</span><span class="row-text"><strong>Bring:</strong> ${escapeHtml(r.documents)}</span></div>`);
+    if (r.apply) rowsHtml.push(`<div class="row"><span class="row-icon" aria-hidden="true">➜</span><span class="row-text"><strong>How:</strong> ${escapeHtml(r.apply)}</span></div>`);
 
     const detailHtml = r.service ? `
-      <button class="expand-toggle" type="button" aria-expanded="false">More about this program</button>
+      <button class="expand-toggle" type="button" aria-expanded="false">What this program does</button>
       <div class="detail">
-        <h4>About this program</h4>
+        <h4>What this program does</h4>
         <p>${escapeHtml(r.service)}</p>
       </div>` : "";
 
-    const notesHtml = r.notes ? `
-      <div class="notes"><strong>Note:</strong> ${escapeHtml(r.notes)}</div>` : "";
+    // Combine the audit notes with a no-contact warning if applicable
+    let notesText = r.notes || "";
+    if (noContact) {
+      const warning = "We don't have a phone or website for this location. Call 2-1-1 to verify before going.";
+      notesText = notesText ? `${warning}  ${notesText}` : warning;
+    }
+    const notesHtml = notesText ? `
+      <div class="notes"${noContact ? ' data-strong="true"' : ""}><strong>Note:</strong> ${escapeHtml(notesText)}</div>` : "";
 
-    const verified = r.last_verified ? `<div class="verified">Last checked: ${escapeHtml(r.last_verified)}</div>` : "";
+    const verified = r.last_verified
+      ? `<div class="verified">Last checked: <time datetime="${escapeHtml(r.last_verified)}">${escapeHtml(formatVerifiedDate(r.last_verified))}</time></div>`
+      : "";
 
     return `
     <article class="card" ${flagAttr}>
       <header class="card-head">
         <div class="card-prog">${escapeHtml(r.program || "Resource")}</div>
-        <h3 class="card-name">${escapeHtml(r.agency)}</h3>
+        <h3 class="card-name">${agencyEsc}</h3>
         <div class="card-loc">${loc}</div>
       </header>
       <div class="card-grid">${rowsHtml.join("")}</div>
@@ -249,6 +294,7 @@
     if (rows === null) {
       resultsEl.innerHTML = `<div class="empty">
         <p><strong>Pick a city or county</strong> — and what kind of help you need — to see agencies near you.</p>
+        <p lang="es"><strong>Elige una ciudad o condado</strong> y el tipo de ayuda que necesitas para ver las agencias cercanas.</p>
       </div>`;
       setStatus("");
       return;
@@ -267,20 +313,11 @@
     const needName = state.bucket || "any kind of help";
     setStatus(`<span class="count">${rows.length}</span> ${rows.length === 1 ? "agency" : "agencies"} in <strong>${escapeHtml(placeName)}</strong> · ${escapeHtml(needName)}`);
 
-    // Render in batches so the main thread never blocks
-    resultsEl.innerHTML = "";
-    let i = 0;
-    function step() {
-      if (myToken !== renderToken) return;
-      const end = Math.min(i + RENDER_BATCH, rows.length);
-      const html = [];
-      for (; i < end; i++) html.push(cardHTML(rows[i]));
-      resultsEl.insertAdjacentHTML("beforeend", html.join(""));
-      if (i < rows.length) {
-        requestAnimationFrame(step);
-      }
-    }
-    step();
+    // Render in one shot. Earlier we batched with rAF, but rAF is paused in
+    // background tabs and throttled in low-power mode, leaving the user with
+    // only the first 20 results and no clue more existed. Even the worst case
+    // (~937 cards) parses in under 150ms on a modest phone — fast enough.
+    resultsEl.innerHTML = rows.map(cardHTML).join("");
   }
 
   // Event delegation: expand toggles

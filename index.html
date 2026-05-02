@@ -19,6 +19,8 @@
 </head>
 <body>
 
+<a class="skip-link" href="#app">Skip to filters</a>
+
 <header class="hero">
   <div class="hero-band"></div>
   <div class="hero-inner">
@@ -37,25 +39,33 @@
 </header>
 
 <main id="app">
+  <noscript>
+    <div class="noscript-fallback">
+      <p><strong>This directory needs JavaScript to work.</strong></p>
+      <p>For free help right now: dial <a href="tel:211">2-1-1</a> (24/7 referrals) or visit <a href="https://nc211.org" rel="noopener">nc211.org</a>.</p>
+      <p>For emergencies dial <a href="tel:911">911</a>.</p>
+    </div>
+  </noscript>
+
   <section class="filters" aria-label="Filter agencies">
     <label class="field">
-      <span class="field-label">I'm in</span>
-      <select id="placeType" aria-label="Filter by city or county">
+      <span class="field-label" id="placeTypeLabel">Where</span>
+      <select id="placeType" aria-labelledby="placeTypeLabel">
         <option value="city">City</option>
         <option value="county">County</option>
       </select>
     </label>
 
     <label class="field grow">
-      <span class="field-label">&nbsp;</span>
-      <select id="placeValue" aria-label="Choose a place">
+      <span class="field-label" id="placeValueLabel">City</span>
+      <select id="placeValue" aria-labelledby="placeValueLabel">
         <option value="">Any city</option>
       </select>
     </label>
 
     <label class="field grow">
-      <span class="field-label">I need</span>
-      <select id="bucket" aria-label="Choose a type of help">
+      <span class="field-label" id="bucketLabel">What you need</span>
+      <select id="bucket" aria-labelledby="bucketLabel">
         <option value="">Any kind of help</option>
       </select>
     </label>
@@ -63,15 +73,18 @@
     <button id="clear" class="ghost" type="button" aria-label="Clear all filters">Clear</button>
   </section>
 
-  <section class="status" id="status" aria-live="polite"></section>
+  <section class="status" id="status" role="status" aria-live="polite"></section>
 
-  <section id="results" class="results" aria-live="polite"></section>
+  <h2 class="visually-hidden">Results</h2>
+  <section id="results" class="results"></section>
 </main>
 
 <footer class="foot">
+  <div class="urgent-callout">
+    <p><strong>Need help right now?</strong> Dial <a href="tel:911">911</a> for emergencies, or <a href="tel:211">2-1-1</a> for 24/7 referrals to community help.</p>
+  </div>
   <p><strong>This is a free service.</strong> Information was collected from each agency's own website and from NC 211. Things change — agency hours, phone numbers, and program availability may have changed since we last checked. <strong>Please call before going.</strong></p>
-  <p>For emergencies dial <a href="tel:911">911</a>. For 24/7 referrals to community help, dial <a href="tel:211">2-1-1</a> or visit <a href="https://nc211.org" rel="noopener">nc211.org</a>.</p>
-  <p class="meta">Data last refreshed <span id="data-date">—</span> · <a href="/about.html">About</a></p>
+  <p class="meta">Data last refreshed <span id="data-date">—</span> · <a href="/about.html">About this directory</a></p>
 </footer>
 
 <script src="/app.js" defer></script>

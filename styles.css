@@ -43,8 +43,58 @@ body {
 
 a { color: var(--nc-blue); }
 a:focus-visible, button:focus-visible, select:focus-visible {
-  outline: 3px solid var(--nc-gold);
+  /* nc-blue passes WCAG AAA contrast on white; gold inner ring keeps brand */
+  outline: 3px solid var(--nc-blue);
   outline-offset: 2px;
+  box-shadow: 0 0 0 5px var(--nc-gold);
+}
+
+/* Visually hidden but available to screen readers */
+.visually-hidden {
+  position: absolute !important;
+  clip: rect(1px, 1px, 1px, 1px);
+  clip-path: inset(50%);
+  width: 1px; height: 1px;
+  overflow: hidden;
+  white-space: nowrap;
+  padding: 0; margin: -1px; border: 0;
+}
+
+/* Skip link for keyboard users — invisible until focused */
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  background: var(--nc-blue);
+  color: var(--paper);
+  padding: 0.6rem 1rem;
+  text-decoration: none;
+  font-weight: 600;
+  z-index: 10;
+}
+.skip-link:focus {
+  left: 0;
+  top: 0;
+}
+
+/* Fallback shown only when JS is disabled */
+.noscript-fallback {
+  background: var(--paper);
+  border: 2px solid var(--nc-red);
+  border-radius: var(--radius);
+  padding: 1rem 1.1rem;
+  margin: 1rem 0;
+}
+.noscript-fallback p { margin: 0.4rem 0; }
+.noscript-fallback a { color: var(--nc-red); font-weight: 700; }
+
+/* Respect users who turn motion down */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+  .cta:hover, button:hover { filter: none; }
 }
 
 /* ---------- Hero ---------- */
@@ -328,6 +378,12 @@ button.ghost:hover { background: var(--cream); }
   color: #6b4a00;
 }
 .notes strong { color: var(--nc-red); }
+.notes[data-strong="true"] {
+  background: #fff0f0;
+  border-left-color: var(--nc-red);
+  color: #5e0008;
+  font-weight: 500;
+}
 
 .verified {
   font-size: 0.75rem;
@@ -395,8 +451,20 @@ button.ghost:hover { background: var(--cream); }
 }
 .foot .meta {
   font-size: 0.8rem;
-  color: rgba(255, 255, 255, 0.6);
+  color: rgba(255, 255, 255, 0.78);
 }
+
+.urgent-callout {
+  background: rgba(206, 17, 38, 0.18);
+  border: 1px solid rgba(206, 17, 38, 0.45);
+  border-radius: var(--radius);
+  padding: 0.7rem 1rem;
+  max-width: 920px;
+  margin: 0 auto 1rem;
+  color: var(--paper);
+}
+.urgent-callout p { margin: 0; font-size: 0.95rem; }
+.urgent-callout strong { color: #ffb1b8; }
 
 /* ---------- Larger screens ---------- */
 
@@ -416,9 +484,35 @@ button.ghost:hover { background: var(--cream); }
 /* ---------- Print (so social workers can print and hand it out) ---------- */
 
 @media print {
-  .hero, .filters, .foot, .cta-row, .expand-toggle, .about-link { display: none !important; }
+  .hero, .filters, .foot, .expand-toggle, .about-link, .skip-link { display: none !important; }
   .status { display: none; }
   body { background: white; color: black; }
-  .card { break-inside: avoid; box-shadow: none; border: 1px solid #999; }
+  .card {
+    break-inside: avoid;
+    box-shadow: none;
+    border: 1px solid #999;
+    page-break-inside: avoid;
+    margin-bottom: 0.5rem;
+  }
   .card-name { font-size: 1.05rem; }
+  /* Show CTAs as plain text in print so the phone number / address is readable */
+  .cta-row { margin-top: 0.4rem; display: block; }
+  .cta {
+    display: inline;
+    background: transparent !important;
+    color: black !important;
+    border: none !important;
+    padding: 0;
+    font-weight: normal;
+    text-decoration: none;
+  }
+  .cta::after {
+    content: " (" attr(href) ")";
+    font-size: 0.85em;
+    color: #444;
+  }
+  /* Strip tel: and mailto: prefixes from print output */
+  .cta[href^="tel:"]::after { content: ""; }
+  /* Hide map deep-link URL — phone number + address is enough on paper */
+  .cta[href*="maps."]::after { content: ""; }
 }
