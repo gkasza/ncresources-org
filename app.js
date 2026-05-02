@@ -19,9 +19,26 @@
   const resultsEl = $("results");
   const dataDateEl = $("data-date");
 
-  const RENDER_BATCH = 20;
   let dataset = null;
   let renderToken = 0; // bumped each render so stale batches abort
+
+  // Lazy-loaded service descriptions. Keyed by row id.
+  // Populated on first expand of any card.
+  let detailsCache = null;
+  let detailsPromise = null;
+  function loadDetails() {
+    if (detailsCache) return Promise.resolve(detailsCache);
+    if (detailsPromise) return detailsPromise;
+    detailsPromise = fetch("/details.json", { cache: "force-cache" })
+      .then((r) => r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`)))
+      .then((data) => { detailsCache = data; return data; })
+      .catch((err) => {
+        console.error("details.json fetch failed:", err);
+        detailsCache = {};
+        return detailsCache;
+      });
+    return detailsPromise;
+  }
 
   function setStatus(html) {
     statusEl.innerHTML = html;
@@ -252,12 +269,16 @@
     if (r.documents && r.documents !== "None") rowsHtml.push(`<div class="row"><span class="row-icon" aria-hidden="true">📄</span><span class="row-text"><strong>Bring:</strong> ${escapeHtml(r.documents)}</span></div>`);
     if (r.apply) rowsHtml.push(`<div class="row"><span class="row-icon" aria-hidden="true">➜</span><span class="row-text"><strong>How:</strong> ${escapeHtml(r.apply)}</span></div>`);
 
-    const detailHtml = r.service ? `
-      <button class="expand-toggle" type="button" aria-expanded="false">What this program does</button>
+    // We fetch the full service description on demand from /details.json
+    // — keeps the initial payload smaller. Show the toggle for every row
+    // (the cache may not be loaded yet); if it turns out to have no detail,
+    // we hide the toggle when the cache resolves.
+    const detailHtml = `
+      <button class="expand-toggle" type="button" aria-expanded="false" data-row-id="${r.id}">What this program does</button>
       <div class="detail">
         <h4>What this program does</h4>
-        <p>${escapeHtml(r.service)}</p>
-      </div>` : "";
+        <p data-detail-for="${r.id}"><em>Loading…</em></p>
+      </div>`;
 
     // Combine the audit notes with a no-contact warning if applicable
     let notesText = r.notes || "";
@@ -320,16 +341,35 @@
     resultsEl.innerHTML = rows.map(cardHTML).join("");
   }
 
-  // Event delegation: expand toggles
+  // Event delegation: expand toggles. Lazy-loads /details.json on first
+  // open so the initial payload stays small.
   resultsEl.addEventListener("click", (e) => {
     const t = e.target.closest(".expand-toggle");
     if (!t) return;
     const detail = t.nextElementSibling;
-    if (detail && detail.classList.contains("detail")) {
-      const open = detail.classList.toggle("open");
-      t.setAttribute("aria-expanded", open ? "true" : "false");
-      t.textContent = open ? "Hide details" : "More about this program";
-    }
+    if (!detail || !detail.classList.contains("detail")) return;
+
+    const open = detail.classList.toggle("open");
+    t.setAttribute("aria-expanded", open ? "true" : "false");
+    t.textContent = open ? "Hide details" : "What this program does";
+
+    if (!open) return;
+    const rowId = t.dataset.rowId;
+    const para = detail.querySelector("p[data-detail-for]");
+    if (!para || !rowId) return;
+    if (para.dataset.loaded === "true") return;
+
+    loadDetails().then((cache) => {
+      const text = cache[rowId];
+      if (text) {
+        para.textContent = text;
+      } else {
+        // Hide the whole detail block if there's nothing to show
+        para.parentElement.style.display = "none";
+        t.style.display = "none";
+      }
+      para.dataset.loaded = "true";
+    });
   });
 
   function applyState(state, push) {
@@ -365,19 +405,72 @@
     });
   }
 
+  // While the directory data (~370 KB compressed) is downloading on a
+  // cellular connection, the dropdowns only have a single placeholder
+  // option each. A user tapping during that window sees "Any city" as
+  // the only choice and rightly thinks the app is broken. So: disable
+  // every input until the data has actually loaded, with a visible
+  // loading indicator on the place dropdown so users know to wait.
+  function setLoading(loading) {
+    [placeTypeEl, placeValueEl, bucketEl, clearBtn].forEach((el) => {
+      if (!el) return;
+      el.disabled = loading;
+      el.setAttribute("aria-busy", loading ? "true" : "false");
+    });
+    if (loading) {
+      // overwrite the placeholder so the user sees something is happening
+      placeValueEl.innerHTML = `<option>Loading agencies…</option>`;
+      bucketEl.innerHTML = `<option>Loading…</option>`;
+      document.body.classList.add("is-loading");
+    } else {
+      document.body.classList.remove("is-loading");
+    }
+  }
+
+  // Surface unexpected errors to the user instead of leaving them with
+  // a silently-broken page. (Without this, a JS error during init would
+  // leave inputs disabled forever and only show "Loading directory…".)
+  function showFatalError(message) {
+    setStatus("");
+    resultsEl.innerHTML = `<div class="empty">
+      <p><strong>The directory couldn't load.</strong> Please try refreshing the page.</p>
+      <p>If the problem continues, dial <a href="tel:211">2-1-1</a> for community help referrals or visit <a href="https://nc211.org" rel="noopener">nc211.org</a> directly.</p>
+      <p class="meta-error">Technical detail: ${escapeHtml(message)}</p>
+    </div>`;
+  }
+
   async function init() {
+    setLoading(true);
     setStatus("Loading directory…");
+
+    // Catch any JS error that fires during init (e.g. malformed JSON)
+    window.addEventListener("error", (e) => {
+      console.error("Uncaught error:", e.error || e.message);
+      if (!dataset) showFatalError(e.error?.message || e.message || "Unknown error");
+    });
+    window.addEventListener("unhandledrejection", (e) => {
+      console.error("Unhandled rejection:", e.reason);
+      if (!dataset) showFatalError(String(e.reason).slice(0, 120));
+    });
+
     try {
       const res = await fetch("/data.json", { cache: "force-cache" });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       dataset = await res.json();
     } catch (err) {
-      setStatus(`Could not load directory data: ${err.message}. Try refreshing.`);
+      console.error("data.json fetch failed:", err);
+      showFatalError(err.message || "Could not reach the directory file.");
+      // Re-enable Clear so user can try interacting; leave selects disabled
+      if (clearBtn) clearBtn.disabled = false;
       return;
     }
+
     if (dataDateEl && dataset.generated_at) {
       dataDateEl.textContent = dataset.generated_at;
     }
+
+    setLoading(false); // re-enable inputs now that we have data
+
     const initial = stateFromUrl();
     placeTypeEl.value = initial.placeType;
     bindControls();

@@ -233,12 +233,54 @@ select {
   border: 1px solid var(--line-strong);
   border-radius: 10px;
   padding: 0.7rem 2.25rem 0.7rem 0.85rem;
-  font-size: 1rem;
+  /* iOS Safari auto-zooms when tapping inputs with font-size < 16px;
+     keep this >= 16 to prevent the page bouncing on every tap. */
+  font-size: 16px;
   min-height: var(--tap);
   width: 100%;
   color: var(--ink);
+  /* Make sure the native picker isn't blocked by anything */
+  pointer-events: auto;
+  position: relative;
+  z-index: 1;
 }
-select:disabled { opacity: 0.6; }
+select:disabled,
+select[aria-busy="true"] {
+  opacity: 0.55;
+  cursor: progress;
+  background-color: #f4f1e8;
+}
+button.ghost:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* Loading shimmer on the filter card while data fetches */
+body.is-loading .filters {
+  position: relative;
+}
+body.is-loading .filters::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius);
+  pointer-events: none; /* don't block the picker even while loading */
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(245, 179, 53, 0.12) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.4s linear infinite;
+}
+@keyframes shimmer {
+  from { background-position: 100% 0; }
+  to   { background-position: -100% 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  body.is-loading .filters::after { animation: none; opacity: 0; }
+}
 
 button.ghost {
   grid-column: span 2;
@@ -429,8 +471,15 @@ button.ghost:hover { background: var(--cream); }
   padding: 2rem 1rem;
   color: var(--ink-mute);
 }
-.empty p { font-size: 1rem; }
+.empty p { font-size: 1rem; margin: 0.5rem 0; }
+.empty p[lang="es"] { color: var(--ink-soft); font-size: 0.95rem; }
 .empty strong { color: var(--ink); }
+.meta-error {
+  font-size: 0.75rem;
+  color: var(--ink-mute);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  margin-top: 1rem !important;
+}
 
 /* ---------- Footer ---------- */
 
