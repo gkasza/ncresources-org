@@ -63,42 +63,83 @@
     return s;
   }
 
-  // Populate the dropdowns based on the current placeType + bucket selection
+  // Compute facet counts that account for the OTHER active filters.
+  //   - For the bucket dropdown: count rows that match the current place filter
+  //     (but ignore the bucket filter so each bucket shows its own potential count).
+  //   - For the place dropdown: count rows that match the current bucket filter.
+  // This way the (count) next to "Food & Meals" reflects what you'll actually see
+  // once you click it, given everything else you've already picked.
+  function computeFacetCounts(state) {
+    const placeKey = state.placeType === "county" ? "county" : "city";
+    const buckets = Object.create(null);
+    const places = Object.create(null);
+
+    for (const r of dataset.rows) {
+      const matchesPlace = !state.placeValue || (r[placeKey] || "") === state.placeValue;
+      const matchesBucket = !state.bucket || (r.bucket || "") === state.bucket;
+
+      // Bucket count: ignore current bucket selection (we want each option's reachable count)
+      if (matchesPlace) {
+        const b = r.bucket || "Other";
+        buckets[b] = (buckets[b] || 0) + 1;
+      }
+
+      // Place count: ignore current place selection
+      if (matchesBucket) {
+        const p = r[placeKey];
+        if (p) places[p] = (places[p] || 0) + 1;
+      }
+    }
+    return { buckets, places };
+  }
+
   function populateFacets(state) {
     const facets = dataset.facets;
-    // Place dropdown: cities or counties
-    const list = state.placeType === "county" ? facets.counties : facets.cities;
-    const currentValue = state.placeValue;
-    const placeholder = state.placeType === "county" ? "Any county" : "Any city";
+    const counts = computeFacetCounts(state);
+
+    // ---- Place dropdown: cities OR counties, only those with non-zero matches
+    // (always keep the currently-selected one visible, even if it would now be 0)
+    const fullList = state.placeType === "county" ? facets.counties : facets.cities;
+    const totalForPlaceholder = Object.values(counts.places).reduce((a, b) => a + b, 0);
+    const placeholder = state.placeType === "county"
+      ? `Any county  (${totalForPlaceholder})`
+      : `Any city  (${totalForPlaceholder})`;
 
     placeValueEl.innerHTML = "";
     const empty = document.createElement("option");
     empty.value = "";
     empty.textContent = placeholder;
     placeValueEl.appendChild(empty);
-    for (const v of list) {
+
+    for (const v of fullList) {
+      const n = counts.places[v] || 0;
+      // hide places with 0 matches under the current bucket filter,
+      // but keep the currently-selected one so the user always sees their pick
+      if (n === 0 && v !== state.placeValue) continue;
       const o = document.createElement("option");
       o.value = v;
-      o.textContent = v;
-      if (v === currentValue) o.selected = true;
+      o.textContent = `${v}  (${n})`;
+      if (v === state.placeValue) o.selected = true;
       placeValueEl.appendChild(o);
     }
 
-    // Bucket dropdown: bucket list with counts
-    if (bucketEl.options.length === 0 || bucketEl.dataset.populated !== "true") {
-      bucketEl.innerHTML = "";
-      const any = document.createElement("option");
-      any.value = "";
-      any.textContent = "Any kind of help";
-      bucketEl.appendChild(any);
-      for (const b of facets.buckets) {
-        const o = document.createElement("option");
-        o.value = b;
-        const n = dataset.bucket_counts[b] || 0;
-        o.textContent = `${b}  (${n})`;
-        bucketEl.appendChild(o);
-      }
-      bucketEl.dataset.populated = "true";
+    // ---- Bucket dropdown: every bucket with its (place-filtered) count
+    bucketEl.innerHTML = "";
+    const totalAcross = Object.values(counts.buckets).reduce((a, b) => a + b, 0);
+    const any = document.createElement("option");
+    any.value = "";
+    any.textContent = `Any kind of help  (${totalAcross})`;
+    bucketEl.appendChild(any);
+
+    for (const b of facets.buckets) {
+      const n = counts.buckets[b] || 0;
+      const o = document.createElement("option");
+      o.value = b;
+      o.textContent = `${b}  (${n})`;
+      // visually de-emphasize 0-count buckets but keep them selectable
+      // (in case the user wants to clear the place filter and see them anyway)
+      if (n === 0) o.style.color = "#999";
+      bucketEl.appendChild(o);
     }
     bucketEl.value = state.bucket;
   }
