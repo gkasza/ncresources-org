@@ -255,7 +255,7 @@
 
     // Safety net: agency has no phone AND no website. The user has no way
     // to reach this place to verify before showing up. Surface a 211 prompt.
-    const noContact = !tel && !web;
+    // (noContact was computed above alongside `flag`.)
     if (noContact) {
       ctas.unshift(`<a class="cta" href="tel:211" aria-label="Call 2-1-1 to verify this listing"><span aria-hidden="true">📞</span> Call 2-1-1 first</a>`);
     }
