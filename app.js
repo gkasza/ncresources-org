@@ -133,12 +133,12 @@
 
     for (const b of facets.buckets) {
       const n = counts.buckets[b] || 0;
+      // hide buckets with 0 matches under the current place filter
+      // (keep the currently-selected one even if 0, so the user always sees their pick)
+      if (n === 0 && b !== state.bucket) continue;
       const o = document.createElement("option");
       o.value = b;
       o.textContent = `${b}  (${n})`;
-      // visually de-emphasize 0-count buckets but keep them selectable
-      // (in case the user wants to clear the place filter and see them anyway)
-      if (n === 0) o.style.color = "#999";
       bucketEl.appendChild(o);
     }
     bucketEl.value = state.bucket;
