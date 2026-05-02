@@ -502,6 +502,18 @@ button.ghost:hover { background: var(--cream); }
   font-size: 0.8rem;
   color: rgba(255, 255, 255, 0.78);
 }
+.foot .credit {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.92);
+  margin-top: 0.4rem;
+  margin-bottom: 0.1rem;
+  letter-spacing: 0.01em;
+}
+.foot .credit [aria-hidden="true"] {
+  display: inline-block;
+  transform: translateY(1px);
+  margin: 0 0.15em;
+}
 
 .urgent-callout {
   background: rgba(206, 17, 38, 0.18);

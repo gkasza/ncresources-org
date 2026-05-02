@@ -466,7 +466,8 @@
     }
 
     if (dataDateEl && dataset.generated_at) {
-      dataDateEl.textContent = dataset.generated_at;
+      // Show as "May 1, 2026" rather than the raw ISO "2026-05-01"
+      dataDateEl.textContent = formatVerifiedDate(dataset.generated_at);
     }
 
     setLoading(false); // re-enable inputs now that we have data
