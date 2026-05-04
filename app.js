@@ -434,7 +434,7 @@
     setStatus("");
     resultsEl.innerHTML = `<div class="empty">
       <p><strong>The directory couldn't load.</strong> Please try refreshing the page.</p>
-      <p>If the problem continues, dial <a href="tel:211">2-1-1</a> for community help referrals or visit <a href="https://nc211.org" rel="noopener">nc211.org</a> directly.</p>
+      <p>If the problem continues, dial <a href="tel:211">2-1-1</a> for 24/7 community help referrals.</p>
       <p class="meta-error">Technical detail: ${escapeHtml(message)}</p>
     </div>`;
   }
@@ -454,7 +454,10 @@
     });
 
     try {
-      const res = await fetch("/data.json", { cache: "default" });
+      // Use no-cache so the browser revalidates with the server (sends
+      // If-Modified-Since), avoiding stale data after a fresh export. We
+      // still get a 304 fast-path when the file hasn't changed.
+      const res = await fetch("/data.json", { cache: "no-cache" });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       dataset = await res.json();
     } catch (err) {
