@@ -14,6 +14,7 @@
   const placeTypeEl = $("placeType");
   const placeValueEl = $("placeValue");
   const bucketEl = $("bucket");
+  const searchEl = $("search");
   const clearBtn = $("clear");
   const statusEl = $("status");
   const resultsEl = $("results");
@@ -56,9 +57,10 @@
 
   function readState() {
     return {
-      placeType: placeTypeEl.value,           // "city" | "county"
-      placeValue: placeValueEl.value || "",   // "" = any
-      bucket: bucketEl.value || "",           // "" = any
+      placeType: placeTypeEl.value,                       // "city" | "county"
+      placeValue: placeValueEl.value || "",               // "" = any
+      bucket: bucketEl.value || "",                       // "" = any
+      search: (searchEl && searchEl.value || "").trim(),  // "" = no name filter
     };
   }
 
@@ -67,16 +69,18 @@
     if (s.placeType !== "city") params.set("place", s.placeType);
     if (s.placeValue) params.set(s.placeType, s.placeValue);
     if (s.bucket) params.set("need", s.bucket);
+    if (s.search) params.set("q", s.search);
     const qs = params.toString();
     return qs ? `?${qs}` : "/";
   }
 
   function stateFromUrl() {
     const params = new URLSearchParams(window.location.search);
-    const s = { placeType: "city", placeValue: "", bucket: "" };
+    const s = { placeType: "city", placeValue: "", bucket: "", search: "" };
     if (params.get("place") === "county") s.placeType = "county";
     s.placeValue = params.get(s.placeType) || "";
     s.bucket = params.get("need") || "";
+    s.search = (params.get("q") || "").trim();
     return s;
   }
 
@@ -169,14 +173,24 @@
   }
 
   function filterRows(state) {
-    if (!state.placeValue && !state.bucket) {
-      // Don't render the entire 2500-row directory by default — pick something first
+    // Need at least one filter (place, bucket, or search) before rendering —
+    // otherwise the user gets the whole 2500-row directory.
+    if (!state.placeValue && !state.bucket && !state.search) {
       return null;
     }
     const placeKey = state.placeType === "county" ? "county" : "city";
+    const q = (state.search || "").toLowerCase();
     return dataset.rows.filter((r) => {
       if (state.placeValue && (r[placeKey] || "") !== state.placeValue) return false;
       if (state.bucket && (r.bucket || "") !== state.bucket) return false;
+      if (q) {
+        // Match against agency name, program label, address, and city — these
+        // are the fields a user is most likely typing partial words from.
+        const hay = [
+          r.agency, r.program, r.address, r.city, r.county,
+        ].filter(Boolean).join("   ").toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
       return true;
     });
   }
@@ -330,9 +344,16 @@
       return;
     }
 
-    const placeName = state.placeValue || (state.placeType === "county" ? "any county" : "any city");
-    const needName = state.bucket || "any kind of help";
-    setStatus(`<span class="count">${rows.length}</span> ${rows.length === 1 ? "agency" : "agencies"} in <strong>${escapeHtml(placeName)}</strong> · ${escapeHtml(needName)}`);
+    const parts = [];
+    if (state.placeValue) {
+      parts.push(`in <strong>${escapeHtml(state.placeValue)}</strong>`);
+    } else if (state.bucket || state.search) {
+      parts.push(state.placeType === "county" ? "in any NC county" : "across NC");
+    }
+    if (state.bucket) parts.push(escapeHtml(state.bucket));
+    if (state.search) parts.push(`matching <strong>"${escapeHtml(state.search)}"</strong>`);
+    const word = rows.length === 1 ? "agency" : "agencies";
+    setStatus(`<span class="count">${rows.length}</span> ${word} ${parts.join(" · ")}`);
 
     // Render in one shot. Earlier we batched with rAF, but rAF is paused in
     // background tabs and throttled in low-power mode, leaving the user with
@@ -381,6 +402,13 @@
     } else {
       history.replaceState(state, "", newUrl);
     }
+    // Update document.title with filter state so search engines and shared
+    // links surface meaningful titles instead of one generic site title.
+    const titleParts = ["NC Resources"];
+    if (state.placeValue) titleParts.push(state.placeValue);
+    if (state.bucket) titleParts.push(state.bucket);
+    if (state.search) titleParts.push(`"${state.search}"`);
+    document.title = titleParts.join(" · ") + " — Free help across North Carolina";
   }
 
   function bindControls() {
@@ -391,9 +419,19 @@
     });
     placeValueEl.addEventListener("change", () => applyState(readState(), true));
     bucketEl.addEventListener("change", () => applyState(readState(), true));
+    if (searchEl) {
+      // Debounce typing so we don't re-render on every keystroke. 180ms feels
+      // immediate to a human typing while keeping the worst-case render cheap.
+      let searchTimer = null;
+      searchEl.addEventListener("input", () => {
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(() => applyState(readState(), true), 180);
+      });
+    }
     clearBtn.addEventListener("click", () => {
       placeValueEl.value = "";
       bucketEl.value = "";
+      if (searchEl) searchEl.value = "";
       applyState(readState(), true);
     });
     window.addEventListener("popstate", (e) => {
@@ -401,6 +439,7 @@
       placeTypeEl.value = s.placeType || "city";
       placeValueEl.value = s.placeValue || "";
       bucketEl.value = s.bucket || "";
+      if (searchEl) searchEl.value = s.search || "";
       applyState(s, false);
     });
   }
@@ -477,6 +516,7 @@
 
     const initial = stateFromUrl();
     placeTypeEl.value = initial.placeType;
+    if (searchEl && initial.search) searchEl.value = initial.search;
     bindControls();
     applyState(initial, false);
   }

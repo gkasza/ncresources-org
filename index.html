@@ -11,6 +11,12 @@
 <meta property="og:description" content="Find free food, shelter, utility help, diapers, transportation, and other community resources across North Carolina." />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="https://nc-resources.org" />
+<meta property="og:site_name" content="NC Resources" />
+<meta property="og:locale" content="en_US" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="NC Resources — Free help across North Carolina" />
+<meta name="twitter:description" content="Free directory of food, shelter, utility help, diaper banks, and other community resources across North Carolina." />
+<link rel="canonical" href="https://nc-resources.org/" />
 <title>NC Resources — Free help across North Carolina</title>
 <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
 <link rel="apple-touch-icon" href="/icon-192.png" />
@@ -71,6 +77,11 @@
       </select>
     </label>
 
+    <label class="field grow search-field">
+      <span class="field-label" id="searchLabel">Search by name (optional)</span>
+      <input id="search" type="search" autocomplete="off" inputmode="search" aria-labelledby="searchLabel" placeholder="e.g. Hope House, Salvation Army" />
+    </label>
+
     <button id="clear" class="ghost" type="button" aria-label="Clear all filters">Clear</button>
   </section>
 
@@ -86,7 +97,7 @@
   </div>
   <p><strong>This is a free service.</strong> Information was gathered from each agency's own website and from a range of public referral directories and agency APIs. Things change — agency hours, phone numbers, and program availability may have changed since we last checked. <strong>Please call before going.</strong></p>
   <p class="meta credit">Built with <span aria-hidden="true">❤️</span><span class="visually-hidden"> love </span>by Diana K.</p>
-  <p class="meta">Data is static as of <span id="data-date">May 3, 2026</span> · <a href="/about.html">About this directory</a></p>
+  <p class="meta">Data is static as of <span id="data-date" aria-live="polite">recently</span> · <a href="/about.html">About this directory</a></p>
 </footer>
 
 <script src="/app.js?v=2" defer></script>
