@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<meta name="theme-color" content="#0B2545" />
+<meta name="theme-color" content="#081C36" />
 <meta name="color-scheme" content="light" />
-<meta name="description" content="Free directory of food, shelter, rent &amp; utility help, legal aid, mental health crisis lines, childcare, WIC, healthcare, and community resources across all 100 North Carolina counties." />
+<meta name="description" content="Free directory of 2,900+ verified food, shelter, rent &amp; utility help, legal aid, mental health crisis lines, childcare, WIC, dental &amp; medical clinics across all 100 North Carolina counties." />
 <meta name="robots" content="index, follow" />
 <meta property="og:title" content="NC Resources — Free help across all 100 North Carolina counties" />
 <meta property="og:description" content="Find free food, shelter, rent &amp; utility help, legal aid, crisis support, childcare, diapers, transportation, and healthcare across North Carolina." />
@@ -15,12 +15,12 @@
 <meta property="og:locale" content="en_US" />
 <meta name="twitter:card" content="summary" />
 <meta name="twitter:title" content="NC Resources — Free help across North Carolina" />
-<meta name="twitter:description" content="Free directory of 2,800+ verified food, housing, utility, legal aid, crisis, healthcare, and family resources across all 100 North Carolina counties." />
+<meta name="twitter:description" content="Free directory of 2,900+ verified community resources across all 100 North Carolina counties." />
 <link rel="canonical" href="https://nc-resources.org/" />
 <title>NC Resources — Free help across North Carolina</title>
 <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
 <link rel="manifest" href="/manifest.webmanifest" />
-<link rel="stylesheet" href="/styles.css?v=3" />
+<link rel="stylesheet" href="/styles.css?v=4" />
 <link rel="preload" href="/data.json" as="fetch" type="application/json" crossorigin="anonymous" />
 </head>
 <body>
@@ -29,7 +29,10 @@
 
 <div class="urgent-bar" role="region" aria-label="24/7 Urgent Help">
   <div class="urgent-bar-inner">
-    <span class="urgent-label" data-i18n="urgentLabel">Need help right now?</span>
+    <span class="urgent-label">
+      <span class="live-dot" aria-hidden="true"></span>
+      <span data-i18n="urgentLabel">Need help right now?</span>
+    </span>
     <div class="urgent-links">
       <a href="tel:911" class="urgent-pill urgent-911"><strong>911</strong> <span data-i18n="urgent911">Emergency</span></a>
       <a href="tel:211" class="urgent-pill"><strong>2-1-1</strong> <span data-i18n="urgent211">24/7 Referrals</span></a>
@@ -40,15 +43,24 @@
 
 <header class="hero">
   <div class="hero-accent" aria-hidden="true"></div>
+  <div class="hero-glow" aria-hidden="true"></div>
+
   <div class="hero-inner">
     <a href="/" class="brand" aria-label="NC Resources home">
-      <img src="/favicon.svg" class="brand-logo" width="42" height="42" alt="" aria-hidden="true" />
+      <span class="brand-halo">
+        <img src="/favicon.svg" class="brand-logo" width="44" height="44" alt="" aria-hidden="true" />
+      </span>
       <span class="brand-text">
         <strong>NC Resources</strong>
-        <em data-i18n="brandTagline">Free community help · North Carolina</em>
+        <em data-i18n="brandTagline">Free community help · All 100 NC counties</em>
       </span>
     </a>
     <nav class="hero-nav" aria-label="Primary">
+      <button type="button" class="nav-saved is-hidden" id="navSavedBtn" aria-label="View saved list">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+        <span data-i18n="navSaved">Saved</span>
+        <span class="saved-badge" id="navSavedCount">0</span>
+      </button>
       <div class="lang-switch" role="group" aria-label="Language">
         <button type="button" class="lang-btn is-active" data-lang="en" aria-pressed="true">EN</button>
         <button type="button" class="lang-btn" data-lang="es" aria-pressed="false">ES</button>
@@ -58,14 +70,38 @@
   </div>
 
   <div class="hero-copy">
-    <h1 class="lede" data-i18n="heroTitle">Find free help across North Carolina.</h1>
-    <p class="lede-sub" data-i18n="heroSub">Pick your area or choose a category below. No account, no ads, no tracking.</p>
-    <div class="hero-stats" id="heroStats" aria-label="Directory coverage">
-      <span class="stat-pill"><strong id="statTotal">2,800+</strong> <span data-i18n="statPrograms">verified listings</span></span>
-      <span class="stat-pill"><strong>100</strong> <span data-i18n="statCounties">NC counties</span></span>
-      <span class="stat-pill"><strong id="statBuckets">15</strong> <span data-i18n="statCategories">help categories</span></span>
+    <div class="hero-eyebrow" data-i18n="heroEyebrow">Independent · Free · No Login · Zero Tracking</div>
+    <h1 class="lede">
+      <span data-i18n="heroTitleLead">Free community help across</span>
+      <span class="lede-accent" data-i18n="heroTitleAccent">North Carolina.</span>
+    </h1>
+    <p class="lede-sub" data-i18n="heroSub">Real phone numbers, addresses, and hours for food, housing, utility bills, legal aid, healthcare, and family support — built for families and social workers.</p>
+
+    <div class="hero-metrics" aria-label="Directory coverage">
+      <div class="metric-card">
+        <strong id="statTotal">2,906</strong>
+        <span data-i18n="statPrograms">Verified listings</span>
+      </div>
+      <div class="metric-card">
+        <strong>100 / 100</strong>
+        <span data-i18n="statCounties">NC counties</span>
+      </div>
+      <div class="metric-card">
+        <strong id="statCities">299</strong>
+        <span data-i18n="statCities">Cities &amp; towns</span>
+      </div>
+      <div class="metric-card">
+        <strong id="statBuckets">15</strong>
+        <span data-i18n="statCategories">Help categories</span>
+      </div>
     </div>
   </div>
+
+  <svg class="hero-ridge" viewBox="0 0 1440 120" preserveAspectRatio="none" aria-hidden="true">
+    <path class="ridge-back" d="M0,76 C180,28 340,95 540,62 C760,26 940,86 1160,46 C1290,22 1380,44 1440,58 L1440,120 L0,120 Z"/>
+    <path class="ridge-mid" d="M0,92 C220,52 400,104 640,74 C860,46 1060,96 1260,64 C1350,50 1410,64 1440,74 L1440,120 L0,120 Z"/>
+    <path class="ridge-front" d="M0,106 C280,82 520,114 820,94 C1060,78 1260,106 1440,92 L1440,120 L0,120 Z"/>
+  </svg>
 </header>
 
 <main id="app">
@@ -108,7 +144,7 @@
         <span class="field-label" id="searchLabel" data-i18n="labelSearch">Search by name, program, or keyword</span>
         <span class="search-wrap">
           <svg class="search-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-          <input id="search" type="search" autocomplete="off" inputmode="search" aria-labelledby="searchLabel" placeholder="e.g. Legal Aid, WIC, Food Bank, Hope House" />
+          <input id="search" type="search" autocomplete="off" inputmode="search" aria-labelledby="searchLabel" placeholder="e.g. Legal Aid, WIC, dental, food bank, rent" />
         </span>
       </label>
 
@@ -116,7 +152,7 @@
     </div>
 
     <div class="quick-places" id="quickPlaces" aria-label="Quick select area">
-      <span class="quick-label" data-i18n="quickAreas">Quick areas:</span>
+      <span class="quick-label" data-i18n="quickAreas">Popular NC areas:</span>
       <div class="quick-chips" id="quickPlaceChips"></div>
     </div>
   </section>
@@ -124,32 +160,72 @@
   <div class="print-header" id="printHeader" aria-hidden="true"></div>
 
   <section class="toolbar is-hidden" id="toolbar">
-    <div class="status" id="status" role="status" aria-live="polite"></div>
-    <div class="toolbar-actions">
-      <button type="button" id="allCategoriesBtn" class="tool-btn" data-i18n="btnAllCategories">All categories</button>
-      <button type="button" id="printBtn" class="tool-btn tool-btn-primary">
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></svg>
-        <span data-i18n="btnPrint">Print list</span>
-      </button>
+    <div class="toolbar-top">
+      <div class="status" id="status" role="status" aria-live="polite"></div>
+      <div class="toolbar-actions">
+        <button type="button" id="allCategoriesBtn" class="tool-btn" data-i18n="btnAllCategories">All categories</button>
+        <button type="button" id="copyListBtn" class="tool-btn is-hidden" data-i18n="btnCopySaved">Copy saved list</button>
+        <button type="button" id="printBtn" class="tool-btn tool-btn-primary">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></svg>
+          <span data-i18n="btnPrint">Print list</span>
+        </button>
+      </div>
+    </div>
+    <div class="toolbar-bottom">
+      <div class="active-pills" id="activePills"></div>
+      <div class="quick-toggles" role="group" aria-label="Refine results">
+        <button type="button" class="refine-pill" id="toggleVerified" aria-pressed="false" data-i18n="refineVerified">Verified recently</button>
+        <button type="button" class="refine-pill" id="togglePhone" aria-pressed="false" data-i18n="refinePhone">Has phone</button>
+        <button type="button" class="refine-pill" id="toggleWebsite" aria-pressed="false" data-i18n="refineWebsite">Has website</button>
+      </div>
     </div>
   </section>
 
-  <section class="home-discovery" id="homeDiscovery" aria-label="Browse categories">
-    <div class="section-head">
-      <h2 data-i18n="browseHeading">Browse by type of help</h2>
-      <p data-i18n="browseSub">Tap any category to see local and statewide programs.</p>
+  <section class="home-discovery" id="homeDiscovery" aria-label="Explore help">
+    <div class="scenarios-block">
+      <div class="section-head">
+        <span class="section-kicker" data-i18n="scenariosKicker">Start here</span>
+        <h2 data-i18n="scenariosHeading">What can we help with today?</h2>
+        <p data-i18n="scenariosSub">One-tap shortcuts for the most urgent needs facing North Carolina families.</p>
+      </div>
+      <div class="scenarios-grid" id="scenariosGrid"></div>
     </div>
-    <div class="category-grid" id="categoryGrid"></div>
+
+    <div class="categories-block">
+      <div class="section-head">
+        <span class="section-kicker" data-i18n="browseKicker">Full directory</span>
+        <h2 data-i18n="browseHeading">Browse all 15 help categories</h2>
+        <p data-i18n="browseSub">Tap any category to explore local offices, pantries, clinics, and statewide programs.</p>
+      </div>
+      <div class="category-grid" id="categoryGrid"></div>
+    </div>
 
     <div class="statewide-spotlight">
-      <div class="spotlight-copy">
-        <span class="spotlight-eyebrow" data-i18n="spotlightEyebrow">Available in all 100 NC counties</span>
-        <h3 data-i18n="spotlightTitle">Statewide programs you can apply for today</h3>
-        <p data-i18n="spotlightSub">SNAP, Medicaid, heating bills (LIEAP), free eviction defense, free prescription medicine, WIC, and free tax filing.</p>
+      <div class="spotlight-top">
+        <div class="spotlight-copy">
+          <span class="spotlight-eyebrow" data-i18n="spotlightEyebrow">Available in all 100 NC counties</span>
+          <h3 data-i18n="spotlightTitle">Statewide programs you can apply for today</h3>
+          <p data-i18n="spotlightSub">Whether you live in a major city or a rural mountain or coastal county, these statewide programs serve every NC resident.</p>
+        </div>
+        <button type="button" class="spotlight-btn" id="viewStatewideBtn" data-i18n="spotlightBtn">Browse all statewide programs →</button>
       </div>
-      <div class="spotlight-actions">
-        <button type="button" class="spotlight-btn" id="viewStatewideBtn" data-i18n="spotlightBtn">View all statewide programs</button>
-        <a href="https://epass.nc.gov/" target="_blank" rel="noopener" class="spotlight-btn spotlight-btn-alt" data-i18n="spotlightEpass">Apply on NC ePASS ↗</a>
+
+      <div class="spotlight-cards">
+        <a href="https://epass.nc.gov/" target="_blank" rel="noopener" class="mini-spot">
+          <span class="mini-spot-tag" data-i18n="spotTag1">Online Portal</span>
+          <strong>NC ePASS Benefits</strong>
+          <span data-i18n="spotDesc1">Apply for SNAP, Medicaid, LIEAP heating aid &amp; Work First.</span>
+        </a>
+        <a href="tel:+18662195262" class="mini-spot">
+          <span class="mini-spot-tag" data-i18n="spotTag2">Free Legal Aid</span>
+          <strong>1-866-219-5262</strong>
+          <span data-i18n="spotDesc2">Legal Aid of NC — eviction defense, benefits &amp; protection.</span>
+        </a>
+        <a href="tel:+18663311348" class="mini-spot">
+          <span class="mini-spot-tag" data-i18n="spotTag3">Free Prescriptions</span>
+          <strong>NC MedAssist</strong>
+          <span data-i18n="spotDesc3">Free mail-order medicine for uninsured NC residents.</span>
+        </a>
       </div>
     </div>
   </section>
@@ -169,6 +245,16 @@
   </section>
 </main>
 
+<button type="button" id="floatingSaved" class="floating-saved is-hidden" aria-label="Open saved shortlist">
+  <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+  <span data-i18n="floatingSavedLabel">Saved list</span>
+  <span class="saved-badge" id="floatingSavedCount">0</span>
+</button>
+
+<button type="button" id="backToTop" class="back-to-top is-hidden" aria-label="Back to top">
+  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m18 15-6-6-6 6"/></svg>
+</button>
+
 <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true"></div>
 
 <footer class="foot">
@@ -182,12 +268,12 @@
     </div>
 
     <div class="foot-bottom">
-      <p class="credit"><span data-i18n="footBuilt">Built with</span> <span aria-hidden="true">❤️</span><span class="visually-hidden"> love </span><span data-i18n="footBy">by Diana K. &amp; family in Durham, NC</span></p>
+      <p class="credit"><span data-i18n="footBuilt">Built with</span> <span aria-hidden="true">❤️</span><span class="visually-hidden"> love </span><span data-i18n="footBy">by Diana K @</span> <a href="https://raleighwebsitecompany.com/" target="_blank" rel="noopener">Raleigh Website Company</a></p>
       <p class="meta"><span data-i18n="footUpdated">Updated</span> <span id="data-date" aria-live="polite">recently</span> · <a href="/about.html" data-i18n="footAbout">About this directory &amp; hotlines</a></p>
     </div>
   </div>
 </footer>
 
-<script src="/app.js?v=3" defer></script>
+<script src="/app.js?v=4" defer></script>
 </body>
 </html>

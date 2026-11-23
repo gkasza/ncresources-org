@@ -1,5 +1,5 @@
-/* NC Resources — client-side filter, bilingual EN/ES UI, category discovery & render
- * Pure vanilla JS, zero third-party dependencies, strict CSP compliant.
+/* NC Resources — Flagship client-side filter, EN/ES UI, scenario shortcuts, saved shortlist & render
+ * Pure vanilla JS, zero external dependencies, strict CSP compliant.
  */
 (function () {
   "use strict";
@@ -12,8 +12,10 @@
   const clearBtn = $("clear");
   const statusEl = $("status");
   const toolbarEl = $("toolbar");
+  const activePillsEl = $("activePills");
   const resultsEl = $("results");
   const homeDiscoveryEl = $("homeDiscovery");
+  const scenariosGridEl = $("scenariosGrid");
   const categoryGridEl = $("categoryGrid");
   const quickPlaceChipsEl = $("quickPlaceChips");
   const statewideSectionEl = $("statewideSection");
@@ -21,17 +23,32 @@
   const statewideHeadingEl = $("statewideHeading");
   const viewStatewideBtn = $("viewStatewideBtn");
   const allCategoriesBtn = $("allCategoriesBtn");
+  const copyListBtn = $("copyListBtn");
   const printBtn = $("printBtn");
   const printHeaderEl = $("printHeader");
   const dataDateEl = $("data-date");
   const statTotalEl = $("statTotal");
+  const statCitiesEl = $("statCities");
   const statBucketsEl = $("statBuckets");
+  const navSavedBtn = $("navSavedBtn");
+  const navSavedCount = $("navSavedCount");
+  const floatingSavedBtn = $("floatingSaved");
+  const floatingSavedCount = $("floatingSavedCount");
+  const toggleVerifiedBtn = $("toggleVerified");
+  const togglePhoneBtn = $("togglePhone");
+  const toggleWebsiteBtn = $("toggleWebsite");
+  const backToTopBtn = $("backToTop");
   const toastEl = $("toast");
+
+  const SAVED_STORAGE_KEY = "ncresources_saved_v1";
 
   let dataset = null;
   let detailsCache = null;
   let detailsPromise = null;
   let currentLang = "en";
+  let savedIds = loadSavedIds();
+  let viewingSaved = false;
+  let refine = { verified: false, phone: false, website: false };
   let toastTimer = null;
 
   const POPULAR_CITIES = [
@@ -60,18 +77,17 @@
     "Pitt",
   ];
 
-  // Acronyms preserved during title-case normalization of ALL-CAPS agency names
   const ACRONYMS = new Set([
     "NC", "USA", "US", "YMCA", "YWCA", "DSS", "WIC", "SNAP", "FNS", "VA", "VITA",
-    "AARP", "UNC", "ESL", "GED", "HIV", "AIDS", "HUD", "SRO", "DV", "EBT", "OTC",
+    "AARP", "UNC", "ECU", "ESL", "GED", "HIV", "AIDS", "HUD", "SRO", "DV", "EBT", "OTC",
     "LIEAP", "CIP", "SSI", "SSDI", "TEFAP", "DCRC", "CCSA", "NCAFCC", "NCCADV",
     "MANNA", "BRACE", "NC4VETS", "UMC", "AME", "PCUSA", "LGBTQ", "II", "III", "IV",
     "NW", "NE", "SW", "SE", "PO", "LLC", "INC", "ST", "MT", "HQ", "CC", "BATS",
     "LANC", "CARE", "HOPE", "STEP", "ACTS", "SHIIP", "DHS", "HHS", "DHHS", "DPS",
+    "MOM", "SHAC", "DEQ", "WAP", "NCHFA", "FCC", "GEM", "MTW", "CVAN",
   ]);
   const MINOR_WORDS = new Set(["of", "the", "and", "in", "for", "at", "by", "to", "on", "a", "an", "or"]);
 
-  // Crisp inline SVG icons (18px / 20px, zero external assets)
   const ICONS = {
     food: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></svg>',
     housing: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>',
@@ -92,101 +108,133 @@
     pin: '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>',
     globe: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>',
     share: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/><line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/></svg>',
+    bookmark: '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m19 21-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>',
     clock: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
     check: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16 11 18 13 22 9"/></svg>',
     doc: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/></svg>',
     arrow: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>',
     chevron: '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>',
+    verifiedCheck: '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>',
   };
+
+  const SCENARIOS = [
+    {
+      bucket: "Food & Meals", icon: "food", tone: "amber",
+      titleEn: "Need groceries or a meal today",
+      subEn: "Local food pantries, mobile markets & soup kitchens",
+      titleEs: "Necesito comida o despensa hoy",
+      subEs: "Despensas locales, mercados móviles y comedores",
+    },
+    {
+      bucket: "Legal Aid & Eviction Defense", icon: "legal", tone: "indigo",
+      titleEn: "Facing eviction or legal notice",
+      subEn: "Free Legal Aid helplines, fair housing & tenant rights",
+      titleEs: "Enfrento desalojo o aviso legal",
+      subEs: "Ayuda legal gratuita, vivienda justa y derechos",
+    },
+    {
+      bucket: "Utilities", icon: "utilities", tone: "amber",
+      titleEn: "Power, heat, or phone shutoff",
+      subEn: "Electric/gas bill help, LIEAP, Lifeline & weatherization",
+      titleEs: "Aviso de corte de luz, gas o teléfono",
+      subEs: "Ayuda con facturas, LIEAP, Lifeline y climatización",
+    },
+    {
+      bucket: "Healthcare / Medicaid", icon: "health", tone: "pine",
+      titleEn: "Uninsured medical, dental, or meds",
+      subEn: "Free clinics, NC MedAssist pharmacy & low-cost dental",
+      titleEs: "Médico, dentista o medicinas sin seguro",
+      subEs: "Clínicas gratis, NC MedAssist y clínicas dentales",
+    },
+    {
+      bucket: "Childcare & Family Support", icon: "family", tone: "plum",
+      titleEn: "Kids, WIC, SNAP & childcare help",
+      subEn: "County DSS, WIC formula, Smart Start & NC Pre-K",
+      titleEs: "Niños, WIC, SNAP y cuidado infantil",
+      subEs: "DSS del condado, WIC, Smart Start y NC Pre-K",
+    },
+    {
+      bucket: "Mental Health & Crisis", icon: "crisis", tone: "crimson",
+      titleEn: "Unsafe at home or in crisis",
+      subEn: "24/7 confidential domestic violence shelters, 988 & peers",
+      titleEs: "Peligro en casa o crisis emocional",
+      subEs: "Refugios confidenciales 24/7, 988 y líneas de apoyo",
+    },
+  ];
 
   const CATEGORY_META = {
     "Food & Meals": {
-      icon: "food", tone: "amber",
-      es: "Comida y Despensas",
+      icon: "food", tone: "amber", es: "Comida y Despensas",
       descEn: "Food pantries, hot meals, mobile markets & groceries",
       descEs: "Despensas de alimentos, comidas calientes y mercados móviles",
     },
     "Rent / Housing Assistance": {
-      icon: "housing", tone: "blue",
-      es: "Alquiler y Vivienda",
-      descEn: "Rent help, housing authorities, Section 8 & stability",
-      descEs: "Ayuda con alquiler, autoridades de vivienda y Sección 8",
+      icon: "housing", tone: "blue", es: "Alquiler y Vivienda",
+      descEn: "Rent help, housing authorities, foreclosure & home repair",
+      descEs: "Ayuda con alquiler, autoridades de vivienda y reparación",
     },
     "Shelter": {
-      icon: "shelter", tone: "indigo",
-      es: "Refugio de Emergencia",
+      icon: "shelter", tone: "indigo", es: "Refugio de Emergencia",
       descEn: "Emergency family & adult shelters, transitional housing",
       descEs: "Refugios familiares y de emergencia, vivienda transicional",
     },
     "Utilities": {
-      icon: "utilities", tone: "amber",
-      es: "Luz, Gas y Agua",
-      descEn: "Electric, gas, water bills, LIEAP & weatherization",
-      descEs: "Facturas de electricidad, gas, agua, LIEAP y climatización",
+      icon: "utilities", tone: "amber", es: "Luz, Gas y Agua",
+      descEn: "Electric, gas, water bills, Lifeline & weatherization",
+      descEs: "Facturas de electricidad, gas, agua, Lifeline y climatización",
     },
     "Healthcare / Medicaid": {
-      icon: "health", tone: "pine",
-      es: "Salud y Medicaid",
-      descEn: "Free clinics, Medicaid, NC MedAssist free pharmacy",
-      descEs: "Clínicas gratuitas, Medicaid y farmacia gratis NC MedAssist",
+      icon: "health", tone: "pine", es: "Salud, Dental y Medicaid",
+      descEn: "Free clinics, county health/WIC, dental & free pharmacy",
+      descEs: "Clínicas gratuitas, salud del condado, dental y farmacia",
     },
     "Mental Health & Crisis": {
-      icon: "crisis", tone: "crimson",
-      es: "Salud Mental y Crisis",
+      icon: "crisis", tone: "crimson", es: "Salud Mental y Crisis",
       descEn: "988, 24/7 domestic violence shelters, peer & veteran lines",
       descEs: "988, refugios de violencia doméstica 24/7 y líneas de apoyo",
     },
     "Legal Aid & Eviction Defense": {
-      icon: "legal", tone: "indigo",
-      es: "Ayuda Legal y Desalojos",
+      icon: "legal", tone: "indigo", es: "Ayuda Legal y Desalojos",
       descEn: "Free eviction defense, fair housing, benefits & family law",
       descEs: "Defensa contra desalojos, vivienda justa y ayuda legal gratis",
     },
     "Childcare & Family Support": {
-      icon: "family", tone: "pine",
-      es: "Cuidado Infantil y Familia",
-      descEn: "DSS benefits, WIC, NC Pre-K, Smart Start, SUN Bucks & jobs",
-      descEs: "DSS, WIC, NC Pre-K, Smart Start, SUN Bucks y empleo",
+      icon: "family", tone: "pine", es: "Cuidado Infantil y Familia",
+      descEn: "County DSS, WIC, NC Pre-K, Smart Start, SUN Bucks & jobs",
+      descEs: "DSS del condado, WIC, NC Pre-K, Smart Start y empleo",
     },
     "Diapers & Baby Supplies": {
-      icon: "baby", tone: "plum",
-      es: "Pañales y Artículos de Bebé",
+      icon: "baby", tone: "plum", es: "Pañales y Artículos de Bebé",
       descEn: "Diaper banks, wipes, formula & infant essentials",
       descEs: "Bancos de pañales, toallitas, fórmula y artículos infantiles",
     },
     "Clothing": {
-      icon: "clothing", tone: "blue",
-      es: "Ropa y Calzado",
+      icon: "clothing", tone: "blue", es: "Ropa y Calzado",
       descEn: "Free family & school clothing closets, work attire",
       descEs: "Ropa escolar y familiar gratuita, calzado y vestimenta",
     },
     "Transportation": {
-      icon: "transit", tone: "blue",
-      es: "Transporte",
+      icon: "transit", tone: "blue", es: "Transporte",
       descEn: "Medical rides, county transit & community paratransit",
       descEs: "Transporte médico, tránsito público y viajes comunitarios",
     },
     "Personal Care & Hygiene": {
-      icon: "hygiene", tone: "plum",
-      es: "Higiene Personal",
+      icon: "hygiene", tone: "plum", es: "Higiene Personal",
       descEn: "Toiletries, period products, showers & laundry",
       descEs: "Artículos de aseo, productos menstruales y lavandería",
     },
     "Household Goods": {
-      icon: "home", tone: "amber",
-      es: "Artículos del Hogar",
+      icon: "home", tone: "amber", es: "Artículos del Hogar",
       descEn: "Furniture, beds, kitchenware & home essentials",
       descEs: "Muebles, camas, utensilios y artículos básicos del hogar",
     },
     "Tax & Financial Help": {
-      icon: "tax", tone: "pine",
-      es: "Impuestos y Finanzas",
+      icon: "tax", tone: "pine", es: "Impuestos y Finanzas",
       descEn: "Free IRS VITA tax prep, MyFreeTaxes & disaster aid",
       descEs: "Declaración de impuestos gratis (VITA) y apoyo financiero",
     },
     "Other": {
-      icon: "other", tone: "blue",
-      es: "Otros Recursos",
+      icon: "other", tone: "blue", es: "Otros Recursos",
       descEn: "Summer meals, disaster recovery & local community aid",
       descEs: "Comidas de verano, alivio de desastres y ayuda local",
     },
@@ -199,41 +247,60 @@
       urgent911: "Emergency",
       urgent211: "24/7 Referrals",
       urgent988: "Crisis Lifeline",
-      brandTagline: "Free community help · North Carolina",
+      brandTagline: "Free community help · All 100 NC counties",
+      navSaved: "Saved",
       navAbout: "About",
-      heroTitle: "Find free help across North Carolina.",
-      heroSub: "Pick your area or choose a category below. No account, no ads, no tracking.",
-      statPrograms: "verified listings",
+      heroEyebrow: "Independent · Free · No Login · Zero Tracking",
+      heroTitleLead: "Free community help across",
+      heroTitleAccent: "North Carolina.",
+      heroSub: "Real phone numbers, addresses, and hours for food, housing, utility bills, legal aid, healthcare, and family support — built for families and social workers.",
+      statPrograms: "Verified listings",
       statCounties: "NC counties",
-      statCategories: "help categories",
+      statCities: "Cities & towns",
+      statCategories: "Help categories",
       labelWhere: "Browse by",
       optCity: "City",
       optCounty: "County",
       labelNeed: "What you need",
       labelSearch: "Search by name, program, or keyword",
-      searchPlaceholder: "e.g. Legal Aid, WIC, Food Bank, Hope House",
+      searchPlaceholder: "e.g. Legal Aid, WIC, dental, food bank, rent",
       btnClear: "Clear",
-      quickAreas: "Quick areas:",
+      quickAreas: "Popular NC areas:",
       statewideChip: "Statewide NC",
       btnAllCategories: "All categories",
+      btnCopySaved: "Copy saved list",
       btnPrint: "Print list",
-      browseHeading: "Browse by type of help",
-      browseSub: "Tap any category to see local and statewide programs.",
+      refineVerified: "Verified recently",
+      refinePhone: "Has phone",
+      refineWebsite: "Has website",
+      scenariosKicker: "Start here",
+      scenariosHeading: "What can we help with today?",
+      scenariosSub: "One-tap shortcuts for the most urgent needs facing North Carolina families.",
+      browseKicker: "Full directory",
+      browseHeading: "Browse all 15 help categories",
+      browseSub: "Tap any category to explore local offices, pantries, clinics, and statewide programs.",
       spotlightEyebrow: "Available in all 100 NC counties",
       spotlightTitle: "Statewide programs you can apply for today",
-      spotlightSub: "SNAP, Medicaid, heating bills (LIEAP), free eviction defense, free prescription medicine, WIC, and free tax filing.",
-      spotlightBtn: "View all statewide programs",
-      spotlightEpass: "Apply on NC ePASS ↗",
+      spotlightSub: "Whether you live in a major city or a rural mountain or coastal county, these statewide programs serve every NC resident.",
+      spotlightBtn: "Browse all statewide programs →",
+      spotTag1: "Online Portal",
+      spotDesc1: "Apply for SNAP, Medicaid, LIEAP heating aid & Work First.",
+      spotTag2: "Free Legal Aid",
+      spotDesc2: "Legal Aid of NC — eviction defense, benefits & protection.",
+      spotTag3: "Free Prescriptions",
+      spotDesc3: "Free mail-order medicine for uninsured NC residents.",
       resultsHeading: "Results",
       statewideBadge: "Statewide NC",
       alsoStatewide: "Also available in every NC county",
       alsoStatewideSub: "These statewide helplines and portals serve residents anywhere in North Carolina.",
+      floatingSavedLabel: "Saved list",
+      savedHeading: "Your saved shortlist",
+      savedEmpty: "You haven't saved any listings yet. Tap the bookmark icon on any agency card to build a printable or shareable shortlist.",
       anyCity: "Any city",
       anyCounty: "Any county",
       anyNeed: "Any kind of help",
       loadingAgencies: "Loading agencies…",
       loadingShort: "Loading…",
-      loadingDir: "Loading directory…",
       agencySingular: "agency",
       agencyPlural: "agencies",
       inPlace: "in",
@@ -241,7 +308,7 @@
       acrossNC: "across NC",
       matching: "matching",
       noMatchesTitle: "No local matches found.",
-      noMatchesBody: "Try switching between City and County, picking a broader category, or clearing your search.",
+      noMatchesBody: "Try switching between City and County, turning off a refine toggle, or clearing your search.",
       noMatches211: "For 24/7 free referrals across NC, dial",
       addrMissing: "Address not listed — call before visiting",
       whoLabel: "Who:",
@@ -253,10 +320,16 @@
       directionsBtn: "Directions",
       websiteBtn: "Website",
       shareBtn: "Share",
+      saveAria: "Save to shortlist",
+      unsaveAria: "Remove from shortlist",
       detailsOpen: "Program details",
       detailsHide: "Hide details",
-      lastChecked: "Last checked:",
+      lastChecked: "Checked:",
+      verifiedBadge: "Verified",
       copiedToast: "Copied listing details — ready to paste or text",
+      copiedListToast: "Copied entire saved shortlist — ready to paste or text",
+      savedToast: "Added to your saved shortlist",
+      removedToast: "Removed from your saved shortlist",
       noContactWarn: "We don't have a phone or website for this location. Call 2-1-1 to verify before going.",
       footUrgentStrong: "Need help right now?",
       footUrgentBody: "Dial",
@@ -267,7 +340,7 @@
       footDisclaimer: "Information was gathered from each agency's own website, NC DHHS county directories, and public referral networks. Agency hours, phone numbers, and funding change frequently.",
       footCallFirst: "Please call before going.",
       footBuilt: "Built with",
-      footBy: "by Diana K. & family in Durham, NC",
+      footBy: "by Diana K @",
       footUpdated: "Updated",
       footAbout: "About this directory & hotlines",
     },
@@ -277,41 +350,60 @@
       urgent911: "Emergencia",
       urgent211: "Referencias 24/7",
       urgent988: "Línea de Crisis",
-      brandTagline: "Ayuda comunitaria gratis · Carolina del Norte",
+      brandTagline: "Ayuda comunitaria gratis · Los 100 condados de NC",
+      navSaved: "Guardados",
       navAbout: "Acerca de",
-      heroTitle: "Encuentra ayuda gratuita en Carolina del Norte.",
-      heroSub: "Elige tu área o una categoría abajo. Sin cuenta, sin anuncios y sin rastreo.",
-      statPrograms: "recursos verificados",
-      statCounties: "condados de NC",
-      statCategories: "categorías de ayuda",
+      heroEyebrow: "Independiente · Gratis · Sin Cuenta · Sin Rastreo",
+      heroTitleLead: "Ayuda comunitaria gratuita en",
+      heroTitleAccent: "Carolina del Norte.",
+      heroSub: "Teléfonos, direcciones y horarios reales para comida, vivienda, facturas, ayuda legal, salud y apoyo familiar — hecho para familias y trabajadores sociales.",
+      statPrograms: "Recursos verificados",
+      statCounties: "Condados de NC",
+      statCities: "Ciudades y pueblos",
+      statCategories: "Categorías de ayuda",
       labelWhere: "Buscar por",
       optCity: "Ciudad",
       optCounty: "Condado",
       labelNeed: "Qué necesitas",
       labelSearch: "Buscar por nombre, programa o palabra clave",
-      searchPlaceholder: "ej. Legal Aid, WIC, comida, renta",
+      searchPlaceholder: "ej. Legal Aid, WIC, dental, comida, renta",
       btnClear: "Limpiar",
-      quickAreas: "Áreas rápidas:",
+      quickAreas: "Áreas populares:",
       statewideChip: "Todo NC (Estatal)",
       btnAllCategories: "Ver categorías",
+      btnCopySaved: "Copiar lista guardada",
       btnPrint: "Imprimir lista",
-      browseHeading: "Explora por tipo de ayuda",
-      browseSub: "Toca cualquier categoría para ver programas locales y estatales.",
+      refineVerified: "Verificado hoy",
+      refinePhone: "Con teléfono",
+      refineWebsite: "Con sitio web",
+      scenariosKicker: "Comienza aquí",
+      scenariosHeading: "¿En qué podemos ayudarte hoy?",
+      scenariosSub: "Accesos rápidos para las necesidades más urgentes de las familias en Carolina del Norte.",
+      browseKicker: "Directorio completo",
+      browseHeading: "Explora las 15 categorías de ayuda",
+      browseSub: "Toca cualquier categoría para ver oficinas locales, despensas, clínicas y programas estatales.",
       spotlightEyebrow: "Disponible en los 100 condados de NC",
       spotlightTitle: "Programas estatales que puedes solicitar hoy",
-      spotlightSub: "SNAP, Medicaid, ayuda de calefacción (LIEAP), defensa legal contra desalojos, medicinas gratis, WIC e impuestos gratis.",
-      spotlightBtn: "Ver programas estatales",
-      spotlightEpass: "Solicitar en NC ePASS ↗",
+      spotlightSub: "Sin importar en qué condado vivas, estos programas estatales atienden a todos los residentes elegibles de NC.",
+      spotlightBtn: "Ver todos los programas estatales →",
+      spotTag1: "Portal en Línea",
+      spotDesc1: "Solicita SNAP, Medicaid, ayuda de calefacción LIEAP y Work First.",
+      spotTag2: "Ayuda Legal Gratis",
+      spotDesc2: "Legal Aid of NC — defensa contra desalojos y protección.",
+      spotTag3: "Medicinas Gratis",
+      spotDesc3: "Farmacia gratuita por correo para residentes sin seguro.",
       resultsHeading: "Resultados",
       statewideBadge: "Estatal NC",
       alsoStatewide: "También disponible en todo Carolina del Norte",
       alsoStatewideSub: "Estas líneas de ayuda y portales estatales atienden a residentes en los 100 condados.",
+      floatingSavedLabel: "Lista guardada",
+      savedHeading: "Tu lista guardada",
+      savedEmpty: "Aún no has guardado ningún recurso. Toca el ícono de marcador en cualquier tarjeta para armar tu lista para imprimir o compartir.",
       anyCity: "Cualquier ciudad",
       anyCounty: "Cualquier condado",
       anyNeed: "Cualquier tipo de ayuda",
       loadingAgencies: "Cargando agencias…",
       loadingShort: "Cargando…",
-      loadingDir: "Cargando directorio…",
       agencySingular: "agencia",
       agencyPlural: "agencias",
       inPlace: "en",
@@ -319,7 +411,7 @@
       acrossNC: "en todo NC",
       matching: "con",
       noMatchesTitle: "No se encontraron resultados locales.",
-      noMatchesBody: "Prueba cambiar entre Ciudad y Condado, elegir otra categoría o borrar tu búsqueda.",
+      noMatchesBody: "Prueba cambiar entre Ciudad y Condado, quitar un filtro rápido o borrar tu búsqueda.",
       noMatches211: "Para referencias gratuitas 24/7 en español, llama al",
       addrMissing: "Dirección no disponible — llama antes de ir",
       whoLabel: "Quiénes:",
@@ -331,10 +423,16 @@
       directionsBtn: "Cómo llegar",
       websiteBtn: "Sitio web",
       shareBtn: "Compartir",
+      saveAria: "Guardar en mi lista",
+      unsaveAria: "Quitar de mi lista",
       detailsOpen: "Ver detalles",
       detailsHide: "Ocultar detalles",
       lastChecked: "Verificado:",
+      verifiedBadge: "Verificado",
       copiedToast: "Copiado — listo para pegar o enviar por mensaje",
+      copiedListToast: "Lista guardada copiada — lista para enviar",
+      savedToast: "Guardado en tu lista",
+      removedToast: "Quitado de tu lista",
       noContactWarn: "No tenemos teléfono ni sitio web para este lugar. Llama al 2-1-1 para confirmar antes de ir.",
       footUrgentStrong: "¿Necesitas ayuda ahora?",
       footUrgentBody: "Llama al",
@@ -345,11 +443,38 @@
       footDisclaimer: "La información fue recopilada de los sitios de cada agencia, directorios de NC DHHS y redes públicas. Los horarios y teléfonos cambian con frecuencia.",
       footCallFirst: "Por favor llama antes de ir.",
       footBuilt: "Hecho con",
-      footBy: "por Diana K. y familia en Durham, NC",
+      footBy: "por Diana K @",
       footUpdated: "Actualizado",
       footAbout: "Acerca del directorio y líneas de ayuda",
     },
   };
+
+  function loadSavedIds() {
+    try {
+      const raw = localStorage.getItem(SAVED_STORAGE_KEY);
+      const arr = raw ? JSON.parse(raw) : [];
+      return new Set(Array.isArray(arr) ? arr.map(Number).filter(Boolean) : []);
+    } catch {
+      return new Set();
+    }
+  }
+
+  function persistSavedIds() {
+    try {
+      localStorage.setItem(SAVED_STORAGE_KEY, JSON.stringify([...savedIds]));
+    } catch {
+      // ignore storage errors in private browsing
+    }
+    updateSavedBadges();
+  }
+
+  function updateSavedBadges() {
+    const n = savedIds.size;
+    if (navSavedCount) navSavedCount.textContent = String(n);
+    if (floatingSavedCount) floatingSavedCount.textContent = String(n);
+    if (navSavedBtn) navSavedBtn.classList.toggle("is-hidden", n === 0);
+    if (floatingSavedBtn) floatingSavedBtn.classList.toggle("is-hidden", n === 0 || viewingSaved);
+  }
 
   function t(key) {
     return (I18N[currentLang] && I18N[currentLang][key]) || I18N.en[key] || key;
@@ -395,7 +520,6 @@
       .replace(/'/g, "&#39;");
   }
 
-  // Format ALL-CAPS agency names gently into readable title case while preserving acronyms
   function formatAgencyName(name) {
     if (!name) return "";
     const letters = name.replace(/[^a-zA-Z]/g, "");
@@ -440,6 +564,20 @@
       btn.classList.toggle("is-active", active);
       btn.setAttribute("aria-pressed", active ? "true" : "false");
     });
+    renderScenarios();
+  }
+
+  function renderScenarios() {
+    if (!scenariosGridEl) return;
+    scenariosGridEl.innerHTML = SCENARIOS.map((sc) => `
+      <button type="button" class="scenario-card" data-scenario-bucket="${escapeHtml(sc.bucket)}" data-tone="${sc.tone}">
+        <span class="scenario-icon">${ICONS[sc.icon] || ICONS.other}</span>
+        <span class="scenario-copy">
+          <strong>${escapeHtml(currentLang === "es" ? sc.titleEs : sc.titleEn)}</strong>
+          <span>${escapeHtml(currentLang === "es" ? sc.subEs : sc.subEn)}</span>
+        </span>
+        <span class="scenario-arrow">${ICONS.arrow}</span>
+      </button>`).join("");
   }
 
   function syncSegmented(placeType) {
@@ -448,6 +586,21 @@
       btn.classList.toggle("is-active", active);
       btn.setAttribute("aria-pressed", active ? "true" : "false");
     });
+  }
+
+  function syncRefineButtons() {
+    if (toggleVerifiedBtn) {
+      toggleVerifiedBtn.classList.toggle("is-active", refine.verified);
+      toggleVerifiedBtn.setAttribute("aria-pressed", refine.verified ? "true" : "false");
+    }
+    if (togglePhoneBtn) {
+      togglePhoneBtn.classList.toggle("is-active", refine.phone);
+      togglePhoneBtn.setAttribute("aria-pressed", refine.phone ? "true" : "false");
+    }
+    if (toggleWebsiteBtn) {
+      toggleWebsiteBtn.classList.toggle("is-active", refine.website);
+      toggleWebsiteBtn.setAttribute("aria-pressed", refine.website ? "true" : "false");
+    }
   }
 
   function readState() {
@@ -490,7 +643,6 @@
     for (const r of dataset.rows) {
       const matchesPlace = !state.placeValue || (r[placeKey] || "") === state.placeValue;
       const matchesBucket = !state.bucket || (r.bucket || "") === state.bucket;
-
       if (matchesPlace) {
         const b = r.bucket || "Other";
         buckets[b] = (buckets[b] || 0) + 1;
@@ -511,10 +663,10 @@
 
     for (const name of list) {
       if (!avail.has(name)) continue;
-      const active = state.placeValue === name ? " is-active" : "";
+      const active = !viewingSaved && state.placeValue === name ? " is-active" : "";
       chips.push(`<button type="button" class="chip${active}" data-quick-place="${escapeHtml(name)}">${escapeHtml(name)}</button>`);
     }
-    const swActive = state.placeValue === "Statewide" ? " is-active" : "";
+    const swActive = !viewingSaved && state.placeValue === "Statewide" ? " is-active" : "";
     chips.push(`<button type="button" class="chip chip-statewide${swActive}" data-quick-place="Statewide">${escapeHtml(t("statewideChip"))}</button>`);
     quickPlaceChipsEl.innerHTML = chips.join("");
   }
@@ -601,7 +753,17 @@
     return hay.includes(q);
   }
 
+  function matchesRefine(r) {
+    if (refine.verified && r.last_verified !== dataset.generated_at) return false;
+    if (refine.phone && !telHref(r.phone)) return false;
+    if (refine.website && !ensureProtocol(r.website)) return false;
+    return true;
+  }
+
   function filterRows(state) {
+    if (viewingSaved) {
+      return dataset.rows.filter((r) => savedIds.has(r.id) && matchesRefine(r));
+    }
     if (!state.placeValue && !state.bucket && !state.search) return null;
     const placeKey = state.placeType === "county" ? "county" : "city";
     const q = (state.search || "").toLowerCase();
@@ -609,17 +771,19 @@
       if (state.placeValue && (r[placeKey] || "") !== state.placeValue) return false;
       if (state.bucket && (r.bucket || "") !== state.bucket) return false;
       if (!matchesSearch(r, q)) return false;
+      if (!matchesRefine(r)) return false;
       return true;
     });
   }
 
   function filterStatewideSupplement(state) {
-    if (!state.placeValue || state.placeValue === "Statewide") return [];
+    if (viewingSaved || !state.placeValue || state.placeValue === "Statewide") return [];
     const q = (state.search || "").toLowerCase();
     return dataset.rows.filter((r) => {
       if (r.county !== "Statewide" && r.city !== "Statewide") return false;
       if (state.bucket && (r.bucket || "") !== state.bucket) return false;
       if (!matchesSearch(r, q)) return false;
+      if (!matchesRefine(r)) return false;
       return true;
     });
   }
@@ -632,8 +796,9 @@
     if (
       n.includes("phone confirmation") ||
       n.includes("recommend phone") ||
+      n.includes("unreachable") ||
+      n.includes("no longer active") ||
       n.includes("dead") ||
-      n.includes("appears dead") ||
       n.includes("waitlist") ||
       n.includes("closed") ||
       n.includes("audit ")
@@ -680,6 +845,17 @@
       : `${months[mi]} ${parseInt(m[3], 10)}, ${m[1]}`;
   }
 
+  function formatListingForShare(row) {
+    const lines = [formatAgencyName(row.agency)];
+    if (row.program) lines.push(row.program);
+    const addr = [row.address, row.city && row.city !== "Statewide" ? row.city : null, row.zip].filter(Boolean).join(", ");
+    if (addr) lines.push(`Address: ${addr}`);
+    if (row.phone) lines.push(`Phone: ${row.phone}`);
+    if (row.schedule) lines.push(`Hours: ${row.schedule}`);
+    if (row.website) lines.push(`Website: ${ensureProtocol(row.website) || row.website}`);
+    return lines.join("\n");
+  }
+
   function cardHTML(r) {
     const displayName = formatAgencyName(r.agency);
     const agencyEsc = escapeHtml(displayName);
@@ -690,11 +866,16 @@
     const flag = flagFor(r.notes, noContact);
     const flagAttr = flag ? `data-flag="${flag}"` : "";
     const isStatewide = r.county === "Statewide" || r.city === "Statewide";
+    const isFresh = dataset && r.last_verified === dataset.generated_at && !flag;
+    const isSaved = savedIds.has(r.id);
     const meta = CATEGORY_META[r.bucket] || { tone: "blue" };
 
     const badges = [`<span class="badge" data-tone="${meta.tone}">${escapeHtml(catLabel(r.bucket || "Other"))}</span>`];
     if (isStatewide) {
       badges.push(`<span class="badge badge-statewide">${escapeHtml(t("statewideBadge"))}</span>`);
+    }
+    if (isFresh) {
+      badges.push(`<span class="badge badge-verified">${ICONS.verifiedCheck}<span>${escapeHtml(t("verifiedBadge"))}</span></span>`);
     }
     if (r.program && r.program !== r.bucket) {
       badges.push(`<span class="badge badge-prog">${escapeHtml(r.program)}</span>`);
@@ -704,6 +885,9 @@
     const loc = isStatewide && !r.address
       ? (currentLang === "es" ? "Disponible en los 100 condados de Carolina del Norte" : "Serves all 100 North Carolina counties")
       : (locParts.length ? escapeHtml(locParts.join(", ")) : escapeHtml(t("addrMissing")));
+    const countyTag = !isStatewide && r.county
+      ? `<span class="county-tag">${escapeHtml(r.county)} ${currentLang === "es" ? "Co." : "County"}</span>`
+      : "";
 
     const rowsHtml = [];
     if (r.schedule) {
@@ -750,9 +934,12 @@
     return `
     <article class="card" ${flagAttr}>
       <header class="card-head">
-        <div class="card-badges">${badges.join("")}</div>
+        <div class="card-top-row">
+          <div class="card-badges">${badges.join("")}</div>
+          <button type="button" class="save-btn${isSaved ? " is-saved" : ""}" data-save-id="${r.id}" aria-pressed="${isSaved ? "true" : "false"}" aria-label="${escapeHtml(isSaved ? t("unsaveAria") : t("saveAria"))}">${ICONS.bookmark}</button>
+        </div>
         <h3 class="card-name">${agencyEsc}</h3>
-        <div class="card-loc">${ICONS.pin}<span>${loc}</span></div>
+        <div class="card-loc">${ICONS.pin}<span>${loc}</span>${countyTag}</div>
       </header>
       ${rowsHtml.length ? `<div class="card-rows">${rowsHtml.join("")}</div>` : ""}
       <div class="cta-row">${ctas.join("")}</div>
@@ -767,12 +954,36 @@
     </article>`;
   }
 
+  function renderActivePills(state) {
+    if (!activePillsEl) return;
+    const pills = [];
+    if (viewingSaved) {
+      pills.push(`<button type="button" class="active-pill" data-clear-key="saved">${escapeHtml(t("savedHeading"))} <span class="x" aria-hidden="true">×</span></button>`);
+    } else {
+      if (state.placeValue) {
+        const lbl = state.placeValue === "Statewide" ? t("statewideChip") : state.placeValue;
+        pills.push(`<button type="button" class="active-pill" data-clear-key="place">${escapeHtml(lbl)} <span class="x" aria-hidden="true">×</span></button>`);
+      }
+      if (state.bucket) {
+        pills.push(`<button type="button" class="active-pill" data-clear-key="bucket">${escapeHtml(catLabel(state.bucket))} <span class="x" aria-hidden="true">×</span></button>`);
+      }
+      if (state.search) {
+        pills.push(`<button type="button" class="active-pill" data-clear-key="search">"${escapeHtml(state.search)}" <span class="x" aria-hidden="true">×</span></button>`);
+      }
+    }
+    activePillsEl.innerHTML = pills.join("");
+  }
+
   function updatePrintHeader(state, count) {
     if (!printHeaderEl) return;
     const parts = [];
-    if (state.placeValue) parts.push(state.placeValue === "Statewide" ? "Statewide NC" : state.placeValue);
-    if (state.bucket) parts.push(catLabel(state.bucket));
-    if (state.search) parts.push(`"${state.search}"`);
+    if (viewingSaved) {
+      parts.push(t("savedHeading"));
+    } else {
+      if (state.placeValue) parts.push(state.placeValue === "Statewide" ? "Statewide NC" : state.placeValue);
+      if (state.bucket) parts.push(catLabel(state.bucket));
+      if (state.search) parts.push(`"${state.search}"`);
+    }
     const today = new Date().toLocaleDateString(currentLang === "es" ? "es-US" : "en-US", {
       year: "numeric", month: "short", day: "numeric",
     });
@@ -782,12 +993,15 @@
   }
 
   function render(state) {
+    updateSavedBadges();
+    syncRefineButtons();
     const rows = filterRows(state);
 
     if (rows === null) {
       homeDiscoveryEl.classList.remove("is-hidden");
       toolbarEl.classList.add("is-hidden");
       statewideSectionEl.classList.add("is-hidden");
+      if (copyListBtn) copyListBtn.classList.add("is-hidden");
       resultsEl.innerHTML = "";
       statewideListEl.innerHTML = "";
       statusEl.innerHTML = "";
@@ -796,29 +1010,38 @@
 
     homeDiscoveryEl.classList.add("is-hidden");
     toolbarEl.classList.remove("is-hidden");
+    if (copyListBtn) copyListBtn.classList.toggle("is-hidden", !viewingSaved || rows.length === 0);
+    renderActivePills(state);
 
     const statewideExtra = filterStatewideSupplement(state);
 
-    const parts = [];
-    if (state.placeValue) {
-      const placeDisplay = state.placeValue === "Statewide" ? t("statewideChip") : state.placeValue;
-      parts.push(`${t("inPlace")} <strong>${escapeHtml(placeDisplay)}</strong>`);
-    } else if (state.bucket || state.search) {
-      parts.push(state.placeType === "county" ? t("inAnyCounty") : t("acrossNC"));
+    if (viewingSaved) {
+      const word = rows.length === 1 ? t("agencySingular") : t("agencyPlural");
+      statusEl.innerHTML = `<span class="count">${rows.length.toLocaleString()}</span> ${word} · <strong>${escapeHtml(t("savedHeading"))}</strong>`;
+    } else {
+      const parts = [];
+      if (state.placeValue) {
+        const placeDisplay = state.placeValue === "Statewide" ? t("statewideChip") : state.placeValue;
+        parts.push(`${t("inPlace")} <strong>${escapeHtml(placeDisplay)}</strong>`);
+      } else if (state.bucket || state.search) {
+        parts.push(state.placeType === "county" ? t("inAnyCounty") : t("acrossNC"));
+      }
+      if (state.bucket) parts.push(escapeHtml(catLabel(state.bucket)));
+      if (state.search) parts.push(`${t("matching")} <strong>"${escapeHtml(state.search)}"</strong>`);
+      const word = rows.length === 1 ? t("agencySingular") : t("agencyPlural");
+      statusEl.innerHTML = `<span class="count">${rows.length.toLocaleString()}</span> ${word} ${parts.join(" · ")}`;
     }
-    if (state.bucket) parts.push(escapeHtml(catLabel(state.bucket)));
-    if (state.search) parts.push(`${t("matching")} <strong>"${escapeHtml(state.search)}"</strong>`);
 
-    const word = rows.length === 1 ? t("agencySingular") : t("agencyPlural");
-    statusEl.innerHTML = `<span class="count">${rows.length.toLocaleString()}</span> ${word} ${parts.join(" · ")}`;
     updatePrintHeader(state, rows.length + statewideExtra.length);
 
     if (rows.length === 0) {
-      resultsEl.innerHTML = `<div class="empty">
-        <p><strong>${escapeHtml(t("noMatchesTitle"))}</strong></p>
-        <p>${escapeHtml(t("noMatchesBody"))}</p>
-        <p>${escapeHtml(t("noMatches211"))} <a href="tel:211"><strong>2-1-1</strong></a>.</p>
-      </div>`;
+      resultsEl.innerHTML = viewingSaved
+        ? `<div class="empty"><p><strong>${escapeHtml(t("savedHeading"))}</strong></p><p>${escapeHtml(t("savedEmpty"))}</p></div>`
+        : `<div class="empty">
+            <p><strong>${escapeHtml(t("noMatchesTitle"))}</strong></p>
+            <p>${escapeHtml(t("noMatchesBody"))}</p>
+            <p>${escapeHtml(t("noMatches211"))} <a href="tel:211"><strong>2-1-1</strong></a>.</p>
+          </div>`;
     } else {
       resultsEl.innerHTML = rows.map(cardHTML).join("");
     }
@@ -838,23 +1061,45 @@
   function handleCardActions(container) {
     if (!container) return;
     container.addEventListener("click", (e) => {
-      // Expand details
+      const saveBtn = e.target.closest(".save-btn");
+      if (saveBtn) {
+        const id = Number(saveBtn.dataset.saveId);
+        if (!id) return;
+        const willSave = !savedIds.has(id);
+        if (willSave) {
+          savedIds.add(id);
+          showToast(t("savedToast"));
+        } else {
+          savedIds.delete(id);
+          showToast(t("removedToast"));
+        }
+        persistSavedIds();
+        if (viewingSaved) {
+          render(readState());
+        } else {
+          document.querySelectorAll(`.save-btn[data-save-id="${id}"]`).forEach((b) => {
+            b.classList.toggle("is-saved", willSave);
+            b.setAttribute("aria-pressed", willSave ? "true" : "false");
+            b.setAttribute("aria-label", willSave ? t("unsaveAria") : t("saveAria"));
+          });
+        }
+        return;
+      }
+
       const toggle = e.target.closest(".expand-toggle");
       if (toggle) {
         const card = toggle.closest(".card");
         const detail = card && card.querySelector(".detail");
         if (!detail) return;
-
         const open = detail.classList.toggle("open");
         toggle.setAttribute("aria-expanded", open ? "true" : "false");
         const span = toggle.querySelector("span");
         if (span) span.textContent = open ? t("detailsHide") : t("detailsOpen");
-
         if (!open) return;
+
         const rowId = toggle.dataset.rowId;
         const para = detail.querySelector("p[data-detail-for]");
         if (!para || !rowId || para.dataset.loaded === "true") return;
-
         loadDetails().then((cache) => {
           const text = cache[rowId];
           if (text) {
@@ -868,22 +1113,12 @@
         return;
       }
 
-      // Share / Copy listing
       const shareBtn = e.target.closest(".share-btn");
       if (shareBtn && dataset) {
         const id = Number(shareBtn.dataset.shareId);
         const row = dataset.rows.find((r) => r.id === id);
         if (!row) return;
-        const lines = [formatAgencyName(row.agency)];
-        if (row.program) lines.push(row.program);
-        const addr = [row.address, row.city && row.city !== "Statewide" ? row.city : null, row.zip].filter(Boolean).join(", ");
-        if (addr) lines.push(`Address: ${addr}`);
-        if (row.phone) lines.push(`Phone: ${row.phone}`);
-        if (row.schedule) lines.push(`Hours: ${row.schedule}`);
-        if (row.website) lines.push(`Website: ${ensureProtocol(row.website) || row.website}`);
-        lines.push("Found via https://nc-resources.org/ (please call before going)");
-        const text = lines.join("\n");
-
+        const text = formatListingForShare(row) + "\nFound via https://nc-resources.org/ (please call before going)";
         if (navigator.share) {
           navigator.share({ title: formatAgencyName(row.agency), text }).catch(() => {});
         } else if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -903,17 +1138,29 @@
       history.replaceState(state, "", newUrl);
     }
     const titleParts = ["NC Resources"];
-    if (state.placeValue) titleParts.push(state.placeValue);
-    if (state.bucket) titleParts.push(catLabel(state.bucket));
-    if (state.search) titleParts.push(`"${state.search}"`);
+    if (viewingSaved) {
+      titleParts.push("Saved List");
+    } else {
+      if (state.placeValue) titleParts.push(state.placeValue);
+      if (state.bucket) titleParts.push(catLabel(state.bucket));
+      if (state.search) titleParts.push(`"${state.search}"`);
+    }
     document.title = titleParts.join(" · ") + " — Free help across North Carolina";
   }
 
   function clearAll() {
+    viewingSaved = false;
+    refine = { verified: false, phone: false, website: false };
     placeValueEl.value = "";
     bucketEl.value = "";
     if (searchEl) searchEl.value = "";
     applyState(readState(), true);
+  }
+
+  function openSavedView() {
+    viewingSaved = true;
+    render(readState());
+    toolbarEl.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
   function bindControls() {
@@ -921,6 +1168,7 @@
       btn.addEventListener("click", () => {
         const nextType = btn.dataset.placeType;
         if (!nextType || placeTypeEl.value === nextType) return;
+        viewingSaved = false;
         placeTypeEl.value = nextType;
         const s = readState();
         s.placeValue = "";
@@ -928,12 +1176,19 @@
       });
     });
 
-    placeValueEl.addEventListener("change", () => applyState(readState(), true));
-    bucketEl.addEventListener("change", () => applyState(readState(), true));
+    placeValueEl.addEventListener("change", () => {
+      viewingSaved = false;
+      applyState(readState(), true);
+    });
+    bucketEl.addEventListener("change", () => {
+      viewingSaved = false;
+      applyState(readState(), true);
+    });
 
     if (searchEl) {
       let searchTimer = null;
       searchEl.addEventListener("input", () => {
+        viewingSaved = false;
         clearTimeout(searchTimer);
         searchTimer = setTimeout(() => applyState(readState(), true), 180);
       });
@@ -943,10 +1198,53 @@
     if (allCategoriesBtn) allCategoriesBtn.addEventListener("click", clearAll);
     if (printBtn) printBtn.addEventListener("click", () => window.print());
 
+    if (copyListBtn) {
+      copyListBtn.addEventListener("click", () => {
+        if (!dataset) return;
+        const savedRows = dataset.rows.filter((r) => savedIds.has(r.id));
+        if (!savedRows.length) return;
+        const text = "NC Resources Shortlist (nc-resources.org — please call before going)\n\n" +
+          savedRows.map(formatListingForShare).join("\n\n---\n\n");
+        if (navigator.share) {
+          navigator.share({ title: "NC Resources Shortlist", text }).catch(() => {});
+        } else if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(() => showToast(t("copiedListToast"))).catch(() => {});
+        }
+      });
+    }
+
+    if (navSavedBtn) navSavedBtn.addEventListener("click", openSavedView);
+    if (floatingSavedBtn) floatingSavedBtn.addEventListener("click", openSavedView);
+
+    if (activePillsEl) {
+      activePillsEl.addEventListener("click", (e) => {
+        const pill = e.target.closest("[data-clear-key]");
+        if (!pill) return;
+        const k = pill.dataset.clearKey;
+        if (k === "saved") viewingSaved = false;
+        if (k === "place") placeValueEl.value = "";
+        if (k === "bucket") bucketEl.value = "";
+        if (k === "search" && searchEl) searchEl.value = "";
+        applyState(readState(), true);
+      });
+    }
+
+    const bindRefine = (btn, key) => {
+      if (!btn) return;
+      btn.addEventListener("click", () => {
+        refine[key] = !refine[key];
+        render(readState());
+      });
+    };
+    bindRefine(toggleVerifiedBtn, "verified");
+    bindRefine(togglePhoneBtn, "phone");
+    bindRefine(toggleWebsiteBtn, "website");
+
     if (quickPlaceChipsEl) {
       quickPlaceChipsEl.addEventListener("click", (e) => {
         const chip = e.target.closest("[data-quick-place]");
         if (!chip) return;
+        viewingSaved = false;
         const target = chip.dataset.quickPlace;
         const s = readState();
         s.placeValue = s.placeValue === target ? "" : target;
@@ -954,10 +1252,23 @@
       });
     }
 
+    if (scenariosGridEl) {
+      scenariosGridEl.addEventListener("click", (e) => {
+        const card = e.target.closest("[data-scenario-bucket]");
+        if (!card) return;
+        viewingSaved = false;
+        const s = readState();
+        s.bucket = card.dataset.scenarioBucket || "";
+        applyState(s, true);
+        toolbarEl.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    }
+
     if (categoryGridEl) {
       categoryGridEl.addEventListener("click", (e) => {
         const card = e.target.closest(".cat-card");
         if (!card) return;
+        viewingSaved = false;
         const s = readState();
         s.bucket = card.dataset.bucket || "";
         applyState(s, true);
@@ -967,6 +1278,7 @@
 
     if (viewStatewideBtn) {
       viewStatewideBtn.addEventListener("click", () => {
+        viewingSaved = false;
         const s = readState();
         s.placeValue = "Statewide";
         s.bucket = "";
@@ -988,10 +1300,20 @@
       });
     });
 
+    if (backToTopBtn) {
+      window.addEventListener("scroll", () => {
+        backToTopBtn.classList.toggle("is-hidden", window.scrollY < 500);
+      }, { passive: true });
+      backToTopBtn.addEventListener("click", () => {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      });
+    }
+
     handleCardActions(resultsEl);
     handleCardActions(statewideListEl);
 
     window.addEventListener("popstate", (e) => {
+      viewingSaved = false;
       const s = e.state || stateFromUrl();
       currentLang = s.lang === "es" ? "es" : "en";
       applyTranslations();
@@ -1033,6 +1355,7 @@
     const initial = stateFromUrl();
     currentLang = initial.lang === "es" ? "es" : "en";
     applyTranslations();
+    updateSavedBadges();
     setLoading(true);
 
     window.addEventListener("error", (e) => {
@@ -1060,6 +1383,9 @@
     }
     if (statTotalEl && dataset.total) {
       statTotalEl.textContent = dataset.total.toLocaleString();
+    }
+    if (statCitiesEl && dataset.facets && dataset.facets.cities) {
+      statCitiesEl.textContent = String(dataset.facets.cities.filter((c) => c !== "Statewide").length);
     }
     if (statBucketsEl && dataset.facets && dataset.facets.buckets) {
       statBucketsEl.textContent = String(dataset.facets.buckets.length);
