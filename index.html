@@ -3,103 +3,191 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<meta name="theme-color" content="#002868" />
+<meta name="theme-color" content="#0B2545" />
 <meta name="color-scheme" content="light" />
-<meta name="description" content="Free directory of food, shelter, utility help, diaper banks, transportation, and other community resources across North Carolina. Filter by city, county, and need." />
+<meta name="description" content="Free directory of food, shelter, rent &amp; utility help, legal aid, mental health crisis lines, childcare, WIC, healthcare, and community resources across all 100 North Carolina counties." />
 <meta name="robots" content="index, follow" />
-<meta property="og:title" content="NC Resources — Free help for people in need" />
-<meta property="og:description" content="Find free food, shelter, utility help, diapers, transportation, and other community resources across North Carolina." />
+<meta property="og:title" content="NC Resources — Free help across all 100 North Carolina counties" />
+<meta property="og:description" content="Find free food, shelter, rent &amp; utility help, legal aid, crisis support, childcare, diapers, transportation, and healthcare across North Carolina." />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="https://nc-resources.org" />
 <meta property="og:site_name" content="NC Resources" />
 <meta property="og:locale" content="en_US" />
 <meta name="twitter:card" content="summary" />
 <meta name="twitter:title" content="NC Resources — Free help across North Carolina" />
-<meta name="twitter:description" content="Free directory of food, shelter, utility help, diaper banks, and other community resources across North Carolina." />
+<meta name="twitter:description" content="Free directory of 2,800+ verified food, housing, utility, legal aid, crisis, healthcare, and family resources across all 100 North Carolina counties." />
 <link rel="canonical" href="https://nc-resources.org/" />
 <title>NC Resources — Free help across North Carolina</title>
 <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-<link rel="apple-touch-icon" href="/icon-192.png" />
 <link rel="manifest" href="/manifest.webmanifest" />
-<link rel="stylesheet" href="/styles.css?v=2" />
+<link rel="stylesheet" href="/styles.css?v=3" />
 <link rel="preload" href="/data.json" as="fetch" type="application/json" crossorigin="anonymous" />
 </head>
 <body>
 
-<a class="skip-link" href="#app">Skip to filters</a>
+<a class="skip-link" href="#app" data-i18n="skipLink">Skip to search &amp; filters</a>
+
+<div class="urgent-bar" role="region" aria-label="24/7 Urgent Help">
+  <div class="urgent-bar-inner">
+    <span class="urgent-label" data-i18n="urgentLabel">Need help right now?</span>
+    <div class="urgent-links">
+      <a href="tel:911" class="urgent-pill urgent-911"><strong>911</strong> <span data-i18n="urgent911">Emergency</span></a>
+      <a href="tel:211" class="urgent-pill"><strong>2-1-1</strong> <span data-i18n="urgent211">24/7 Referrals</span></a>
+      <a href="tel:988" class="urgent-pill"><strong>988</strong> <span data-i18n="urgent988">Crisis Lifeline</span></a>
+    </div>
+  </div>
+</div>
 
 <header class="hero">
-  <div class="hero-band"></div>
+  <div class="hero-accent" aria-hidden="true"></div>
   <div class="hero-inner">
     <a href="/" class="brand" aria-label="NC Resources home">
-      <span class="brand-mark" aria-hidden="true">
-        <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-      </span>
+      <img src="/favicon.svg" class="brand-logo" width="42" height="42" alt="" aria-hidden="true" />
       <span class="brand-text">
         <strong>NC Resources</strong>
-        <em>Free community help — North Carolina</em>
+        <em data-i18n="brandTagline">Free community help · North Carolina</em>
       </span>
     </a>
-    <a class="about-link" href="/about.html">About</a>
+    <nav class="hero-nav" aria-label="Primary">
+      <div class="lang-switch" role="group" aria-label="Language">
+        <button type="button" class="lang-btn is-active" data-lang="en" aria-pressed="true">EN</button>
+        <button type="button" class="lang-btn" data-lang="es" aria-pressed="false">ES</button>
+      </div>
+      <a class="nav-link" href="/about.html" data-i18n="navAbout">About</a>
+    </nav>
   </div>
-  <h1 class="lede">What do you need? <span class="lede-sub">Pick your area and your need below.</span></h1>
+
+  <div class="hero-copy">
+    <h1 class="lede" data-i18n="heroTitle">Find free help across North Carolina.</h1>
+    <p class="lede-sub" data-i18n="heroSub">Pick your area or choose a category below. No account, no ads, no tracking.</p>
+    <div class="hero-stats" id="heroStats" aria-label="Directory coverage">
+      <span class="stat-pill"><strong id="statTotal">2,800+</strong> <span data-i18n="statPrograms">verified listings</span></span>
+      <span class="stat-pill"><strong>100</strong> <span data-i18n="statCounties">NC counties</span></span>
+      <span class="stat-pill"><strong id="statBuckets">15</strong> <span data-i18n="statCategories">help categories</span></span>
+    </div>
+  </div>
 </header>
 
 <main id="app">
   <noscript>
     <div class="noscript-fallback">
-      <p><strong>This directory needs JavaScript to work.</strong></p>
-      <p>For free help right now: dial <a href="tel:211">2-1-1</a> for 24/7 community-help referrals.</p>
-      <p>For emergencies dial <a href="tel:911">911</a>.</p>
+      <p><strong>This directory needs JavaScript to filter listings.</strong></p>
+      <p>For free 24/7 community-help referrals across NC, dial <a href="tel:211">2-1-1</a>. For mental health crisis support, call or text <a href="tel:988">988</a>. For emergencies, dial <a href="tel:911">911</a>.</p>
     </div>
   </noscript>
 
-  <section class="filters" aria-label="Filter agencies">
-    <label class="field">
-      <span class="field-label" id="placeTypeLabel">Where</span>
-      <select id="placeType" aria-labelledby="placeTypeLabel">
-        <option value="city">City</option>
-        <option value="county">County</option>
-      </select>
-    </label>
+  <section class="filters-shell" aria-label="Filter agencies">
+    <div class="filters">
+      <div class="field field-mode">
+        <span class="field-label" id="placeTypeLabel" data-i18n="labelWhere">Browse by</span>
+        <div class="segmented" role="group" aria-labelledby="placeTypeLabel">
+          <button type="button" class="seg-btn is-active" data-place-type="city" aria-pressed="true" data-i18n="optCity">City</button>
+          <button type="button" class="seg-btn" data-place-type="county" aria-pressed="false" data-i18n="optCounty">County</button>
+        </div>
+        <select id="placeType" class="visually-hidden" aria-labelledby="placeTypeLabel" tabindex="-1">
+          <option value="city">City</option>
+          <option value="county">County</option>
+        </select>
+      </div>
 
-    <label class="field grow">
-      <span class="field-label" id="placeValueLabel">City</span>
-      <select id="placeValue" aria-labelledby="placeValueLabel">
-        <option value="">Any city</option>
-      </select>
-    </label>
+      <label class="field grow">
+        <span class="field-label" id="placeValueLabel" data-i18n="optCity">City</span>
+        <select id="placeValue" aria-labelledby="placeValueLabel">
+          <option value="">Any city</option>
+        </select>
+      </label>
 
-    <label class="field grow">
-      <span class="field-label" id="bucketLabel">What you need</span>
-      <select id="bucket" aria-labelledby="bucketLabel">
-        <option value="">Any kind of help</option>
-      </select>
-    </label>
+      <label class="field grow">
+        <span class="field-label" id="bucketLabel" data-i18n="labelNeed">What you need</span>
+        <select id="bucket" aria-labelledby="bucketLabel">
+          <option value="">Any kind of help</option>
+        </select>
+      </label>
 
-    <label class="field grow search-field">
-      <span class="field-label" id="searchLabel">Search by name (optional)</span>
-      <input id="search" type="search" autocomplete="off" inputmode="search" aria-labelledby="searchLabel" placeholder="e.g. Hope House, Salvation Army" />
-    </label>
+      <label class="field grow search-field">
+        <span class="field-label" id="searchLabel" data-i18n="labelSearch">Search by name, program, or keyword</span>
+        <span class="search-wrap">
+          <svg class="search-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <input id="search" type="search" autocomplete="off" inputmode="search" aria-labelledby="searchLabel" placeholder="e.g. Legal Aid, WIC, Food Bank, Hope House" />
+        </span>
+      </label>
 
-    <button id="clear" class="ghost" type="button" aria-label="Clear all filters">Clear</button>
+      <button id="clear" class="btn-clear" type="button" aria-label="Clear all filters" data-i18n="btnClear">Clear</button>
+    </div>
+
+    <div class="quick-places" id="quickPlaces" aria-label="Quick select area">
+      <span class="quick-label" data-i18n="quickAreas">Quick areas:</span>
+      <div class="quick-chips" id="quickPlaceChips"></div>
+    </div>
   </section>
 
-  <section class="status" id="status" role="status" aria-live="polite"></section>
+  <div class="print-header" id="printHeader" aria-hidden="true"></div>
 
-  <h2 class="visually-hidden">Results</h2>
+  <section class="toolbar is-hidden" id="toolbar">
+    <div class="status" id="status" role="status" aria-live="polite"></div>
+    <div class="toolbar-actions">
+      <button type="button" id="allCategoriesBtn" class="tool-btn" data-i18n="btnAllCategories">All categories</button>
+      <button type="button" id="printBtn" class="tool-btn tool-btn-primary">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></svg>
+        <span data-i18n="btnPrint">Print list</span>
+      </button>
+    </div>
+  </section>
+
+  <section class="home-discovery" id="homeDiscovery" aria-label="Browse categories">
+    <div class="section-head">
+      <h2 data-i18n="browseHeading">Browse by type of help</h2>
+      <p data-i18n="browseSub">Tap any category to see local and statewide programs.</p>
+    </div>
+    <div class="category-grid" id="categoryGrid"></div>
+
+    <div class="statewide-spotlight">
+      <div class="spotlight-copy">
+        <span class="spotlight-eyebrow" data-i18n="spotlightEyebrow">Available in all 100 NC counties</span>
+        <h3 data-i18n="spotlightTitle">Statewide programs you can apply for today</h3>
+        <p data-i18n="spotlightSub">SNAP, Medicaid, heating bills (LIEAP), free eviction defense, free prescription medicine, WIC, and free tax filing.</p>
+      </div>
+      <div class="spotlight-actions">
+        <button type="button" class="spotlight-btn" id="viewStatewideBtn" data-i18n="spotlightBtn">View all statewide programs</button>
+        <a href="https://epass.nc.gov/" target="_blank" rel="noopener" class="spotlight-btn spotlight-btn-alt" data-i18n="spotlightEpass">Apply on NC ePASS ↗</a>
+      </div>
+    </div>
+  </section>
+
+  <h2 class="visually-hidden" data-i18n="resultsHeading">Results</h2>
   <section id="results" class="results"></section>
+
+  <section id="statewideSection" class="statewide-results is-hidden" aria-label="Statewide programs">
+    <div class="statewide-results-head">
+      <div>
+        <span class="statewide-tag" data-i18n="statewideBadge">Statewide NC</span>
+        <h3 id="statewideHeading" data-i18n="alsoStatewide">Also available in every NC county</h3>
+      </div>
+      <p data-i18n="alsoStatewideSub">These statewide helplines and portals serve residents anywhere in North Carolina.</p>
+    </div>
+    <div id="statewideList" class="results"></div>
+  </section>
 </main>
 
+<div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true"></div>
+
 <footer class="foot">
-  <div class="urgent-callout">
-    <p><strong>Need help right now?</strong> Dial <a href="tel:911">911</a> for emergencies, or <a href="tel:211">2-1-1</a> for 24/7 referrals to community help.</p>
+  <div class="foot-inner">
+    <div class="urgent-callout">
+      <p><strong data-i18n="footUrgentStrong">Need help right now?</strong> <span data-i18n="footUrgentBody">Dial</span> <a href="tel:911">911</a> <span data-i18n="footUrgentOr">for emergencies,</span> <a href="tel:988">988</a> <span data-i18n="footUrgentCrisis">for mental health &amp; crisis support, or</span> <a href="tel:211">2-1-1</a> <span data-i18n="footUrgent211">for 24/7 community referrals.</span></p>
+    </div>
+
+    <div class="foot-disclaimer">
+      <p><strong data-i18n="footFreeStrong">This is a free public service.</strong> <span data-i18n="footDisclaimer">Information was gathered from each agency's own website, NC DHHS county directories, and public referral networks. Agency hours, phone numbers, and funding change frequently.</span> <strong data-i18n="footCallFirst">Please call before going.</strong></p>
+    </div>
+
+    <div class="foot-bottom">
+      <p class="credit"><span data-i18n="footBuilt">Built with</span> <span aria-hidden="true">❤️</span><span class="visually-hidden"> love </span><span data-i18n="footBy">by Diana K. &amp; family in Durham, NC</span></p>
+      <p class="meta"><span data-i18n="footUpdated">Updated</span> <span id="data-date" aria-live="polite">recently</span> · <a href="/about.html" data-i18n="footAbout">About this directory &amp; hotlines</a></p>
+    </div>
   </div>
-  <p><strong>This is a free service.</strong> Information was gathered from each agency's own website and from a range of public referral directories and agency APIs. Things change — agency hours, phone numbers, and program availability may have changed since we last checked. <strong>Please call before going.</strong></p>
-  <p class="meta credit">Built with <span aria-hidden="true">❤️</span><span class="visually-hidden"> love </span>by Diana K.</p>
-  <p class="meta">Data is static as of <span id="data-date" aria-live="polite">recently</span> · <a href="/about.html">About this directory</a></p>
 </footer>
 
-<script src="/app.js?v=2" defer></script>
+<script src="/app.js?v=3" defer></script>
 </body>
 </html>

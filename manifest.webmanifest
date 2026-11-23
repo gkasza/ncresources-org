@@ -1,11 +1,11 @@
 {
   "name": "NC Resources",
   "short_name": "NC Resources",
-  "description": "Free directory of community help across North Carolina.",
+  "description": "Free directory of community help across all 100 North Carolina counties.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#FAF6E8",
-  "theme_color": "#002868",
+  "background_color": "#F6F4EE",
+  "theme_color": "#0B2545",
   "icons": [
     { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" }
   ]
