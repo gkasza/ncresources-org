@@ -37,10 +37,13 @@
   const toggleVerifiedBtn = $("toggleVerified");
   const togglePhoneBtn = $("togglePhone");
   const toggleWebsiteBtn = $("toggleWebsite");
+  const toggleNoSsnBtn = $("toggleNoSsn");
+  const toggleOnlySsnBtn = $("toggleOnlySsn");
   const backToTopBtn = $("backToTop");
   const toastEl = $("toast");
 
   const SAVED_STORAGE_KEY = "ncresources_saved_v1";
+  const SSN_RE = /social security\s*(card|cards|number|numbers|num|#|information|info)|\bssn\b|\bssns\b|ss\s*card|ss#|social security or medicard/i;
 
   let dataset = null;
   let detailsCache = null;
@@ -48,7 +51,7 @@
   let currentLang = "en";
   let savedIds = loadSavedIds();
   let viewingSaved = false;
-  let refine = { verified: false, phone: false, website: false };
+  let refine = { verified: false, phone: false, website: false, noSsn: false, onlySsn: false };
   let toastTimer = null;
 
   const POPULAR_CITIES = [
@@ -114,6 +117,7 @@
     arrow: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>',
     chevron: '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>',
     verifiedCheck: '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>',
+    ssnCheck: '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>',
   };
 
   const SCENARIOS = [
@@ -267,6 +271,8 @@
       refineVerified: "Verified recently",
       refinePhone: "Has phone",
       refineWebsite: "Has website",
+      refineNoSsn: "No SSN required",
+      refineOnlySsn: "Requires SSN",
       scenariosKicker: "Start here",
       scenariosHeading: "What can we help with today?",
       scenariosSub: "One-tap shortcuts for the most urgent needs facing North Carolina families.",
@@ -305,10 +311,12 @@
       noMatchesBody: "Try switching between City and County, turning off a refine toggle, or clearing your search.",
       noMatches211: "For 24/7 free referrals across NC, dial",
       addrMissing: "Address not listed — call before visiting",
-      whoLabel: "Who:",
+      whoLabel: "Who can apply:",
       bringLabel: "Bring:",
       howLabel: "How:",
       noteLabel: "Note:",
+      ssnBadge: "SSN / SS Card Required",
+      ssnWhoTag: "Social Security card / SSN required",
       callBtn: "Call",
       call211Btn: "Call 2-1-1 first",
       directionsBtn: "Directions",
@@ -370,6 +378,8 @@
       refineVerified: "Verificado hoy",
       refinePhone: "Con teléfono",
       refineWebsite: "Con sitio web",
+      refineNoSsn: "Sin Seguro Social",
+      refineOnlySsn: "Pide Seguro Social",
       scenariosKicker: "Comienza aquí",
       scenariosHeading: "¿En qué podemos ayudarte hoy?",
       scenariosSub: "Accesos rápidos para las necesidades más urgentes de las familias en Carolina del Norte.",
@@ -408,10 +418,12 @@
       noMatchesBody: "Prueba cambiar entre Ciudad y Condado, quitar un filtro rápido o borrar tu búsqueda.",
       noMatches211: "Para referencias gratuitas 24/7 en español, llama al",
       addrMissing: "Dirección no disponible — llama antes de ir",
-      whoLabel: "Quiénes:",
+      whoLabel: "Quiénes pueden aplicar:",
       bringLabel: "Llevar:",
       howLabel: "Cómo:",
       noteLabel: "Nota:",
+      ssnBadge: "Requiere Seguro Social",
+      ssnWhoTag: "Requiere tarjeta / número de Seguro Social",
       callBtn: "Llamar",
       call211Btn: "Llama al 2-1-1",
       directionsBtn: "Cómo llegar",
@@ -595,6 +607,14 @@
       toggleWebsiteBtn.classList.toggle("is-active", refine.website);
       toggleWebsiteBtn.setAttribute("aria-pressed", refine.website ? "true" : "false");
     }
+    if (toggleNoSsnBtn) {
+      toggleNoSsnBtn.classList.toggle("is-active", refine.noSsn);
+      toggleNoSsnBtn.setAttribute("aria-pressed", refine.noSsn ? "true" : "false");
+    }
+    if (toggleOnlySsnBtn) {
+      toggleOnlySsnBtn.classList.toggle("is-active", refine.onlySsn);
+      toggleOnlySsnBtn.setAttribute("aria-pressed", refine.onlySsn ? "true" : "false");
+    }
   }
 
   function readState() {
@@ -747,10 +767,16 @@
     return hay.includes(q);
   }
 
+  function requiresSSN(r) {
+    return Boolean(r && (r.requires_ssn || (r.documents && SSN_RE.test(r.documents))));
+  }
+
   function matchesRefine(r) {
     if (refine.verified && r.last_verified !== dataset.generated_at) return false;
     if (refine.phone && !telHref(r.phone)) return false;
     if (refine.website && !ensureProtocol(r.website)) return false;
+    if (refine.noSsn && requiresSSN(r)) return false;
+    if (refine.onlySsn && !requiresSSN(r)) return false;
     return true;
   }
 
@@ -859,12 +885,17 @@
     const noContact = !tel && !web;
     const flag = flagFor(r.notes, noContact);
     const flagAttr = flag ? `data-flag="${flag}"` : "";
+    const needsSsn = requiresSSN(r);
+    const ssnAttr = needsSsn ? ' data-ssn="true"' : "";
     const isStatewide = r.county === "Statewide" || r.city === "Statewide";
     const isFresh = dataset && r.last_verified === dataset.generated_at && !flag;
     const isSaved = savedIds.has(r.id);
     const meta = CATEGORY_META[r.bucket] || { tone: "blue" };
 
     const badges = [`<span class="badge" data-tone="${meta.tone}">${escapeHtml(catLabel(r.bucket || "Other"))}</span>`];
+    if (needsSsn) {
+      badges.push(`<span class="badge badge-ssn">${ICONS.ssnCheck}<span>${escapeHtml(t("ssnBadge"))}</span></span>`);
+    }
     if (isStatewide) {
       badges.push(`<span class="badge badge-statewide">${escapeHtml(t("statewideBadge"))}</span>`);
     }
@@ -887,11 +918,15 @@
     if (r.schedule) {
       rowsHtml.push(`<div class="row"><span class="row-icon">${ICONS.clock}</span><span class="row-text">${escapeHtml(r.schedule)}</span></div>`);
     }
-    if (r.eligibility) {
-      rowsHtml.push(`<div class="row"><span class="row-icon">${ICONS.check}</span><span class="row-text"><strong>${escapeHtml(t("whoLabel"))}</strong> ${escapeHtml(r.eligibility)}</span></div>`);
+    if (r.eligibility || needsSsn) {
+      const ssnTag = needsSsn
+        ? `<span class="ssn-check-tag">${ICONS.ssnCheck}<span>${escapeHtml(t("ssnWhoTag"))}</span></span>`
+        : "";
+      const eligText = r.eligibility ? ` ${escapeHtml(r.eligibility)}` : "";
+      rowsHtml.push(`<div class="row row-who${needsSsn ? " is-ssn" : ""}"><span class="row-icon">${ICONS.check}</span><span class="row-text"><strong>${escapeHtml(t("whoLabel"))}</strong>${eligText}${ssnTag}</span></div>`);
     }
     if (r.documents && r.documents !== "None") {
-      rowsHtml.push(`<div class="row"><span class="row-icon">${ICONS.doc}</span><span class="row-text"><strong>${escapeHtml(t("bringLabel"))}</strong> ${escapeHtml(r.documents)}</span></div>`);
+      rowsHtml.push(`<div class="row row-docs${needsSsn ? " is-ssn" : ""}"><span class="row-icon">${ICONS.doc}</span><span class="row-text"><strong>${escapeHtml(t("bringLabel"))}</strong> ${escapeHtml(r.documents)}</span></div>`);
     }
     if (r.apply) {
       rowsHtml.push(`<div class="row"><span class="row-icon">${ICONS.arrow}</span><span class="row-text"><strong>${escapeHtml(t("howLabel"))}</strong> ${escapeHtml(r.apply)}</span></div>`);
@@ -926,14 +961,14 @@
       : "";
 
     return `
-    <article class="card" ${flagAttr}>
+    <article class="card" ${flagAttr}${ssnAttr}>
       <header class="card-head">
         <div class="card-top-row">
           <div class="card-badges">${badges.join("")}</div>
           <button type="button" class="save-btn${isSaved ? " is-saved" : ""}" data-save-id="${r.id}" aria-pressed="${isSaved ? "true" : "false"}" aria-label="${escapeHtml(isSaved ? t("unsaveAria") : t("saveAria"))}">${ICONS.bookmark}</button>
         </div>
         <h3 class="card-name">${agencyEsc}</h3>
-        <div class="card-loc">${ICONS.pin}<span>${loc}</span>${countyTag}</div>
+        <div class="card-loc">${ICONS.pin}<span class="card-loc-text"><span>${loc}</span>${countyTag ? ` ${countyTag}` : ""}</span></div>
       </header>
       ${rowsHtml.length ? `<div class="card-rows">${rowsHtml.join("")}</div>` : ""}
       <div class="cta-row">${ctas.join("")}</div>
@@ -1144,7 +1179,7 @@
 
   function clearAll() {
     viewingSaved = false;
-    refine = { verified: false, phone: false, website: false };
+    refine = { verified: false, phone: false, website: false, noSsn: false, onlySsn: false };
     placeValueEl.value = "";
     bucketEl.value = "";
     if (searchEl) searchEl.value = "";
@@ -1223,16 +1258,19 @@
       });
     }
 
-    const bindRefine = (btn, key) => {
+    const bindRefine = (btn, key, exclusiveKey) => {
       if (!btn) return;
       btn.addEventListener("click", () => {
         refine[key] = !refine[key];
+        if (refine[key] && exclusiveKey) refine[exclusiveKey] = false;
         render(readState());
       });
     };
     bindRefine(toggleVerifiedBtn, "verified");
     bindRefine(togglePhoneBtn, "phone");
     bindRefine(toggleWebsiteBtn, "website");
+    bindRefine(toggleNoSsnBtn, "noSsn", "onlySsn");
+    bindRefine(toggleOnlySsnBtn, "onlySsn", "noSsn");
 
     if (quickPlaceChipsEl) {
       quickPlaceChipsEl.addEventListener("click", (e) => {

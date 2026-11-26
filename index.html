@@ -2,10 +2,10 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
 <meta name="theme-color" content="#081C36" />
 <meta name="color-scheme" content="light" />
-<meta name="description" content="Free directory of 2,890+ verified food, shelter, rent &amp; utility help, mental health crisis lines, childcare, WIC, dental &amp; medical clinics across all 100 North Carolina counties." />
+<meta name="description" content="Free directory of 2,850+ verified food, shelter, rent &amp; utility help, mental health crisis lines, childcare, WIC, dental &amp; medical clinics across all 100 North Carolina counties." />
 <meta name="robots" content="index, follow" />
 <meta property="og:title" content="NC Resources — Free help across all 100 North Carolina counties" />
 <meta property="og:description" content="Find free food, shelter, rent &amp; utility help, crisis support, childcare, diapers, transportation, and healthcare across North Carolina." />
@@ -15,13 +15,71 @@
 <meta property="og:locale" content="en_US" />
 <meta name="twitter:card" content="summary" />
 <meta name="twitter:title" content="NC Resources — Free help across North Carolina" />
-<meta name="twitter:description" content="Free directory of 2,890+ verified community resources across all 100 North Carolina counties." />
+<meta name="twitter:description" content="Free directory of 2,850+ verified community resources across all 100 North Carolina counties." />
 <link rel="canonical" href="https://nc-resources.org/" />
 <title>NC Resources — Free help across North Carolina</title>
 <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
 <link rel="manifest" href="/manifest.webmanifest" />
-<link rel="stylesheet" href="/styles.css?v=4" />
+<link rel="stylesheet" href="/styles.css?v=6" />
 <link rel="preload" href="/data.json" as="fetch" type="application/json" crossorigin="anonymous" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://nc-resources.org/#organization",
+      "name": "NC Resources",
+      "url": "https://nc-resources.org/",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://nc-resources.org/favicon.svg"
+      },
+      "description": "Free, independent public service directory of verified community assistance programs across all 100 North Carolina counties.",
+      "areaServed": {
+        "@type": "State",
+        "name": "North Carolina"
+      },
+      "knowsLanguage": ["en", "es"]
+    },
+    {
+      "@type": "WebSite",
+      "@id": "https://nc-resources.org/#website",
+      "url": "https://nc-resources.org/",
+      "name": "NC Resources",
+      "description": "Free directory of 2,850+ verified food, shelter, rent & utility help, mental health crisis lines, childcare, WIC, dental & medical clinics across all 100 North Carolina counties.",
+      "inLanguage": ["en-US", "es-US"],
+      "isAccessibleForFree": true,
+      "publisher": {
+        "@id": "https://nc-resources.org/#organization"
+      },
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": {
+          "@type": "EntryPoint",
+          "urlTemplate": "https://nc-resources.org/?q={search_term_string}"
+        },
+        "query-input": "required name=search_term_string"
+      }
+    },
+    {
+      "@type": "CollectionPage",
+      "@id": "https://nc-resources.org/#webpage",
+      "url": "https://nc-resources.org/",
+      "name": "NC Resources — Free help across North Carolina",
+      "description": "Free directory of 2,850+ verified food, shelter, rent & utility help, mental health crisis lines, childcare, WIC, dental & medical clinics across all 100 North Carolina counties.",
+      "inLanguage": ["en-US", "es-US"],
+      "isAccessibleForFree": true,
+      "isPartOf": {
+        "@id": "https://nc-resources.org/#website"
+      },
+      "about": {
+        "@id": "https://nc-resources.org/#organization"
+      }
+    }
+  ]
+}
+</script>
 </head>
 <body>
 
@@ -79,7 +137,7 @@
 
     <div class="hero-metrics" aria-label="Directory coverage">
       <div class="metric-card">
-        <strong id="statTotal">2,891</strong>
+        <strong id="statTotal">2,850</strong>
         <span data-i18n="statPrograms">Verified listings</span>
       </div>
       <div class="metric-card">
@@ -87,7 +145,7 @@
         <span data-i18n="statCounties">NC counties</span>
       </div>
       <div class="metric-card">
-        <strong id="statCities">299</strong>
+        <strong id="statCities">297</strong>
         <span data-i18n="statCities">Cities &amp; towns</span>
       </div>
       <div class="metric-card">
@@ -177,6 +235,8 @@
         <button type="button" class="refine-pill" id="toggleVerified" aria-pressed="false" data-i18n="refineVerified">Verified recently</button>
         <button type="button" class="refine-pill" id="togglePhone" aria-pressed="false" data-i18n="refinePhone">Has phone</button>
         <button type="button" class="refine-pill" id="toggleWebsite" aria-pressed="false" data-i18n="refineWebsite">Has website</button>
+        <button type="button" class="refine-pill" id="toggleNoSsn" aria-pressed="false" data-i18n="refineNoSsn">No SSN required</button>
+        <button type="button" class="refine-pill refine-pill-ssn" id="toggleOnlySsn" aria-pressed="false" data-i18n="refineOnlySsn">Requires SSN</button>
       </div>
     </div>
   </section>
@@ -274,6 +334,6 @@
   </div>
 </footer>
 
-<script src="/app.js?v=5" defer></script>
+<script src="/app.js?v=7" defer></script>
 </body>
 </html>

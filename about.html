@@ -2,14 +2,61 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
 <meta name="theme-color" content="#081C36" />
 <meta name="color-scheme" content="light" />
 <meta name="description" content="About NC Resources — a free community directory covering all 100 North Carolina counties for food, housing, utility help, crisis support, childcare, and healthcare." />
 <title>About — NC Resources</title>
 <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
 <link rel="manifest" href="/manifest.webmanifest" />
-<link rel="stylesheet" href="/styles.css?v=4" />
+<link rel="stylesheet" href="/styles.css?v=6" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://nc-resources.org/#organization",
+      "name": "NC Resources",
+      "url": "https://nc-resources.org/",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://nc-resources.org/favicon.svg"
+      },
+      "description": "Free, independent public service directory of verified community assistance programs across all 100 North Carolina counties.",
+      "areaServed": {
+        "@type": "State",
+        "name": "North Carolina"
+      },
+      "knowsLanguage": ["en", "es"]
+    },
+    {
+      "@type": "WebSite",
+      "@id": "https://nc-resources.org/#website",
+      "url": "https://nc-resources.org/",
+      "name": "NC Resources",
+      "publisher": {
+        "@id": "https://nc-resources.org/#organization"
+      }
+    },
+    {
+      "@type": "AboutPage",
+      "@id": "https://nc-resources.org/about#webpage",
+      "url": "https://nc-resources.org/about",
+      "name": "About — NC Resources",
+      "description": "About NC Resources — a free community directory covering all 100 North Carolina counties for food, housing, utility help, crisis support, childcare, and healthcare.",
+      "inLanguage": "en-US",
+      "isAccessibleForFree": true,
+      "isPartOf": {
+        "@id": "https://nc-resources.org/#website"
+      },
+      "about": {
+        "@id": "https://nc-resources.org/#organization"
+      }
+    }
+  ]
+}
+</script>
 </head>
 <body>
 
@@ -115,6 +162,7 @@
       <li><strong>Save a custom shortlist</strong> — tap the bookmark icon on any listings to build a personal shortlist on your device, then print or copy the entire shortlist to text to a client or family member.</li>
       <li><strong>Share in 1 tap</strong> — every card has a Share button that formats the agency's name, address, phone, and hours cleanly for SMS or messaging apps.</li>
       <li><strong>Print-ready handouts</strong> — tap "Print list" from any filtered view or saved shortlist to print a clean handout with no page clutter.</li>
+      <li><strong>Social Security card / SSN indicator</strong> — programs that ask for a Social Security card or number are highlighted in red with a checkmark in "Who can apply", and you can filter them in or out from the results bar.</li>
       <li><strong>English &amp; Español</strong> — switch the interface between English and Spanish at any time from the top navigation bar.</li>
     </ul>
 
